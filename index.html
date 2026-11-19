@@ -369,13 +369,19 @@
     .res-zip { font-family: monospace; font-weight: 800; color: var(--lp-red); background: var(--lp-red-pale); padding: 0.1rem 0.35rem; border-radius: 3px; white-space: nowrap; }
     .res-addr { flex: 1; font-weight: 600; }
     .res-actions { display: flex; gap: 0.25rem; }
-    .address-book-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; }
-    .contact-card { border: 1px solid var(--border-color); border-radius: 6px; padding: 0.6rem 0.7rem; background: var(--bg-panel); display: flex; flex-direction: column; gap: 0.3rem; }
-    .contact-top { display: flex; align-items: center; justify-content: space-between; }
-    .contact-name { font-weight: 800; font-size: 0.86rem; }
-    .contact-type-tag { font-size: 0.66rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 3px; background: #e0f2fe; color: var(--lp-blue-deep); }
-    .contact-detail { font-size: 0.75rem; color: var(--text-secondary); }
-    .contact-actions { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
+    .address-book-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 360px; overflow-y: auto; }
+    .contact-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 0.65rem 0.75rem; background: var(--bg-panel); display: flex; flex-direction: column; gap: 0.35rem; cursor: pointer; transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s; position: relative; }
+    .contact-card:hover { border-color: var(--lp-blue); background: #f8fbff; box-shadow: 0 2px 8px rgba(0, 91, 171, 0.08); }
+    .contact-card.selected-card { border-color: var(--lp-blue); background: var(--lp-blue-tint); box-shadow: 0 2px 10px rgba(0, 91, 171, 0.14); }
+    .contact-top { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
+    .contact-name { font-weight: 800; font-size: 0.88rem; color: var(--text-main); }
+    .contact-zip-badge { font-family: monospace; font-size: 0.72rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 4px; background: var(--lp-red-pale); color: var(--lp-red); white-space: nowrap; }
+    .contact-detail { font-size: 0.76rem; color: var(--text-secondary); line-height: 1.35; }
+    .contact-actions { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem; flex-wrap: wrap; }
+    .contact-select-prompt { display: none; margin-top: 0.35rem; padding: 0.5rem; border-radius: 6px; background: #ffffff; border: 1.5px solid var(--lp-blue); box-shadow: 0 4px 12px rgba(0, 91, 171, 0.12); }
+    .contact-card.selected-card .contact-select-prompt { display: block; }
+    .contact-select-title { font-size: 0.74rem; font-weight: 800; color: var(--lp-blue-deep); margin-bottom: 0.35rem; text-align: center; }
+    .contact-select-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
     .slider-row { margin-bottom: 0.7rem; }
     .slider-header { display: flex; justify-content: space-between; font-size: 0.76rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.2rem; }
     .slider-val { font-family: monospace; font-weight: 800; color: var(--lp-blue); }
@@ -757,7 +763,7 @@
         <div class="panel-section">
           <div class="section-header">
             <h2 class="section-title"><span>お届け先（To）</span><span class="section-badge">ラベルと連動</span></h2>
-            <button type="button" id="btn-save-to-contact" class="btn btn-outline btn-sm">＋ アドレス帳に保存</button>
+            <button type="button" id="btn-save-to-contact" class="btn btn-outline btn-sm">＋アドレス帳に登録</button>
           </div>
           <div class="form-row">
             <label class="form-label" for="side-to-zip"><span>郵便番号（右上の赤枠7桁マスと連動）</span></label>
@@ -795,7 +801,7 @@
         <div class="panel-section">
           <div class="section-header">
             <h2 class="section-title"><span>ご依頼主（From）</span></h2>
-            <button type="button" id="btn-save-from-contact" class="btn btn-outline btn-sm">＋ アドレス帳に保存</button>
+            <button type="button" id="btn-save-from-contact" class="btn btn-outline btn-sm">＋アドレス帳に登録</button>
           </div>
           <div class="form-row">
             <label class="form-label" for="side-from-zip">郵便番号（おところ横の7桁小枠と連動）</label>
@@ -868,14 +874,22 @@
       <div id="tab-book" class="tab-panel">
         <div class="panel-section">
           <div class="section-header">
-            <h2 class="section-title"><span>保存済みアドレス帳</span><span class="section-badge">JSON連携対応</span></h2>
+            <h2 class="section-title"><span>アドレス帳一覧</span><span id="address-book-count-badge" class="section-badge">0件</span></h2>
             <div style="display:flex; gap:0.35rem;">
+              <button type="button" id="btn-book-register-current" class="btn btn-accent btn-sm">＋アドレス帳に登録</button>
               <button type="button" id="btn-book-save-json" class="btn btn-outline btn-sm">📥 JSON保存</button>
               <button type="button" id="btn-book-load-json" class="btn btn-outline btn-sm">📂 JSON読込</button>
             </div>
           </div>
           <div class="form-row">
-            <input type="text" id="address-book-filter" class="form-input" placeholder="氏名・会社名・住所・郵便番号で絞り込み..." />
+            <label class="form-label" for="address-book-filter">
+              <span>🔍 氏名（依頼主名・お届け先名）・郵便番号・住所の一部で絞り込み</span>
+              <button type="button" id="btn-clear-book-filter" class="btn btn-outline btn-sm" style="padding:0.1rem 0.45rem; font-size:0.68rem; display:none;">クリア</button>
+            </label>
+            <input type="text" id="address-book-filter" class="form-input" placeholder="名前・会社名・郵便番号（ハイフン有無どちらも可）・住所の一部を入力..." />
+          </div>
+          <div style="font-size:0.72rem; color:var(--text-secondary); margin-bottom:0.5rem;">
+            💡 一覧の項目をクリックすると「お届け先」か「ご依頼主」を選択してラベルへ記載できます。
           </div>
           <div id="address-book-list" class="address-book-list"></div>
         </div>
@@ -1598,28 +1612,48 @@
       }
 
       const DEFAULT_CONTACTS = [];
+      const ADDRESS_BOOK_CACHE_KEY = "letterpack_lite_address_book_v1";
       let memoryContacts = DEFAULT_CONTACTS.slice();
+      let selectedContactId = null;
+
+      function loadAddressBookFromCache() {
+        try {
+          const raw = localStorage.getItem(ADDRESS_BOOK_CACHE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              memoryContacts = parsed;
+            }
+          }
+        } catch (_) {}
+      }
+
+      function saveAddressBookToCache() {
+        try {
+          localStorage.setItem(ADDRESS_BOOK_CACHE_KEY, JSON.stringify(memoryContacts));
+        } catch (_) {}
+      }
 
       function getFieldState(prefix) {
         return {
           zip: getZipFromBoxes(prefix).replace(/\s/g, ""),
-          address: (document.getElementById(`canvas-${prefix}-address`) || {}).value || "",
-          subname: (document.getElementById(`canvas-${prefix}-subname`) || {}).value || "",
-          name: (document.getElementById(`canvas-${prefix}-name`) || {}).value || "",
+          address: ((document.getElementById(`canvas-${prefix}-address`) || {}).value || "").trim(),
+          subname: ((document.getElementById(`canvas-${prefix}-subname`) || {}).value || "").trim(),
+          name: ((document.getElementById(`canvas-${prefix}-name`) || {}).value || "").trim(),
           honorific: (document.getElementById(`canvas-${prefix}-honorific`) || {}).value || "",
-          tel: (document.getElementById(`canvas-${prefix}-tel`) || {}).value || ""
+          tel: ((document.getElementById(`canvas-${prefix}-tel`) || {}).value || "").trim()
         };
       }
 
       function setFieldState(prefix, data) {
         setZipToBoxes(prefix, data.zip || "");
         const defaultHon = prefix === "to" ? "様" : "";
-        const honVal = data.honorific !== undefined ? data.honorific : defaultHon;
+        const honVal = (data.honorific !== undefined && data.honorific !== "") ? data.honorific : defaultHon;
         [
           [`canvas-${prefix}-address`, `side-${prefix}-address`, data.address || ""],
           [`canvas-${prefix}-subname`, `side-${prefix}-subname`, data.subname || ""],
           [`canvas-${prefix}-name`, `side-${prefix}-name`, data.name || ""],
-          [`canvas-${prefix}-honorific`, `side-${prefix}-honorific`, honVal],
+          [`canvas-${prefix}-honorific`, `side-${prefix}-honorific`, prefix === "from" ? (data.honorific || "") : honVal],
           [`canvas-${prefix}-tel`, `side-${prefix}-tel`, data.tel || ""]
         ].forEach(([cId, sId, val]) => {
           const c = document.getElementById(cId);
@@ -1628,6 +1662,93 @@
           if (s) s.value = val;
         });
         autoFitTypography();
+      }
+
+      function hasContactContent(fieldObj) {
+        if (!fieldObj) return false;
+        return Boolean(
+          (fieldObj.address && fieldObj.address.trim()) ||
+          (fieldObj.name && fieldObj.name.trim()) ||
+          (fieldObj.subname && fieldObj.subname.trim()) ||
+          (fieldObj.zip && fieldObj.zip.trim())
+        );
+      }
+
+      function upsertContactRecord(fieldObj) {
+        const cleanZip = normalizeDigits(fieldObj.zip || "").replace(/[^0-9]/g, "");
+        const cleanAddr = (fieldObj.address || "").trim();
+        const cleanName = (fieldObj.name || "").trim();
+        const cleanSub = (fieldObj.subname || "").trim();
+        const cleanTel = (fieldObj.tel || "").trim();
+        const cleanHon = (fieldObj.honorific || "").trim();
+
+        const existingIdx = memoryContacts.findIndex((c) =>
+          (c.name || "").trim() === cleanName &&
+          (c.subname || "").trim() === cleanSub &&
+          (c.address || "").trim() === cleanAddr &&
+          normalizeDigits(c.zip || "").replace(/[^0-9]/g, "") === cleanZip
+        );
+
+        const newRecord = {
+          id: existingIdx >= 0 ? memoryContacts[existingIdx].id : ("c_" + Date.now() + "_" + Math.floor(Math.random() * 10000)),
+          zip: cleanZip,
+          address: cleanAddr,
+          subname: cleanSub,
+          name: cleanName,
+          honorific: cleanHon,
+          tel: cleanTel
+        };
+
+        if (existingIdx >= 0) {
+          memoryContacts.splice(existingIdx, 1);
+        }
+        memoryContacts.unshift(newRecord);
+        return newRecord;
+      }
+
+      function registerCurrentContactsToAddressBook(preferredPrefix = null) {
+        const toState = getFieldState("to");
+        const fromState = getFieldState("from");
+        const hasTo = hasContactContent(toState);
+        const hasFrom = hasContactContent(fromState);
+
+        if (!hasTo && !hasFrom) {
+          showToast("お届け先またはご依頼主の住所・氏名を入力してから「＋アドレス帳に登録」を押してください");
+          return;
+        }
+
+        const registeredNames = [];
+        // 依頼主・お届け先両方が記載されていれば両方個別でアドレス一覧に登録する
+        if (hasTo && hasFrom) {
+          if (preferredPrefix === "from") {
+            upsertContactRecord(toState);
+            upsertContactRecord(fromState);
+          } else {
+            upsertContactRecord(fromState);
+            upsertContactRecord(toState);
+          }
+          registeredNames.push(toState.name || toState.subname || toState.address.slice(0, 10));
+          registeredNames.push(fromState.name || fromState.subname || fromState.address.slice(0, 10));
+        } else if (hasTo) {
+          upsertContactRecord(toState);
+          registeredNames.push(toState.name || toState.subname || toState.address.slice(0, 12));
+        } else if (hasFrom) {
+          upsertContactRecord(fromState);
+          registeredNames.push(fromState.name || fromState.subname || fromState.address.slice(0, 12));
+        }
+
+        saveAddressBookToCache();
+        renderAddressBook();
+
+        // アドレス帳タブへ切り替え
+        const bookTabBtn = document.querySelector('.tab-btn[data-tab="tab-book"]');
+        if (bookTabBtn) bookTabBtn.click();
+
+        if (hasTo && hasFrom) {
+          showToast(`お届け先とご依頼主の両方（2件）を個別でアドレス帳一覧に登録・キャッシュ保存しました`);
+        } else {
+          showToast(`「${registeredNames[0]}」をアドレス帳一覧に登録・キャッシュ保存しました`);
+        }
       }
 
       function applySettingsState(settings) {
@@ -1743,12 +1864,14 @@
         // 配列単体または addressBook 専用JSONの場合は、現在のフォーム入力は崩さずアドレス帳一覧のみ読み込む
         if (Array.isArray(data)) {
           memoryContacts = data;
+          saveAddressBookToCache();
           renderAddressBook();
           showToast(`JSONファイルからアドレス帳（${memoryContacts.length}件）を読み込みました`);
           return;
         }
         if (data.type === "address-book-only" && Array.isArray(data.addressBook)) {
           memoryContacts = data.addressBook;
+          saveAddressBookToCache();
           renderAddressBook();
           showToast(`アドレス帳JSONファイル（${memoryContacts.length}件）を読み込みました`);
           return;
@@ -1782,6 +1905,7 @@
         }
         if (Array.isArray(data.addressBook)) {
           memoryContacts = data.addressBook;
+          saveAddressBookToCache();
           renderAddressBook();
         }
         if (data.settings && typeof data.settings === "object") {
@@ -1836,6 +1960,7 @@
               const list = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.addressBook) ? parsed.addressBook : null);
               if (list) {
                 memoryContacts = list;
+                saveAddressBookToCache();
                 renderAddressBook();
                 showToast(`JSONファイルからアドレス帳一覧（${memoryContacts.length}件）を読み込みました`);
                 return;
@@ -1849,38 +1974,108 @@
         reader.readAsText(file, "utf-8");
       }
 
+      function matchesContactFilter(contact, rawQuery) {
+        if (!rawQuery) return true;
+        const normalizedQuery = normalizeDigits(rawQuery).toLowerCase().trim();
+        if (!normalizedQuery) return true;
+        const tokens = normalizedQuery.split(/[\s　]+/).filter(Boolean);
+        const rawZip = normalizeDigits(contact.zip || "").replace(/[^0-9]/g, "");
+        const hyphenZip = formatZipHyphen(rawZip);
+        const haystackRaw = normalizeDigits(
+          `${contact.name || ""} ${contact.subname || ""} ${contact.address || ""} ${rawZip} ${hyphenZip} ${contact.tel || ""}`
+        ).toLowerCase();
+        const haystackCompact = haystackRaw.replace(/[-ー－\s　]/g, "");
+
+        return tokens.every((tk) => {
+          const tkCompact = tk.replace(/[-ー－]/g, "");
+          return haystackRaw.includes(tk) || (tkCompact && haystackCompact.includes(tkCompact));
+        });
+      }
+
       function renderAddressBook() {
         const container = document.getElementById("address-book-list");
         if (!container) return;
-        const q = ((document.getElementById("address-book-filter") || {}).value || "").trim().toLowerCase();
-        const filtered = memoryContacts.filter((c) => !q || (c.name + c.subname + c.address + c.zip).toLowerCase().includes(q));
+        const filterInput = document.getElementById("address-book-filter");
+        const clearFilterBtn = document.getElementById("btn-clear-book-filter");
+        const countBadge = document.getElementById("address-book-count-badge");
+        const q = ((filterInput || {}).value || "").trim();
+        if (clearFilterBtn) {
+          clearFilterBtn.style.display = q ? "inline-flex" : "none";
+        }
+        const filtered = memoryContacts.filter((c) => matchesContactFilter(c, q));
+        if (countBadge) {
+          countBadge.textContent = q
+            ? `${filtered.length} / ${memoryContacts.length}件`
+            : `${memoryContacts.length}件`;
+        }
         container.innerHTML = "";
         if (filtered.length === 0) {
-          container.innerHTML = `<div style="padding:1rem; font-size:0.78rem; color:#64748b; text-align:center;">アドレス帳データはありません（「📂 JSON読込」で読み込むか、「＋ アドレス帳に保存」でJSON保存できます）</div>`;
+          container.innerHTML = `<div style="padding:1rem; font-size:0.78rem; color:#64748b; text-align:center;">${
+            q
+              ? `「${q}」に一致するアドレスは見つかりませんでした`
+              : "登録されたアドレスはありません（「＋アドレス帳に登録」ボタンで一覧へ登録できます）"
+          }</div>`;
           return;
         }
         filtered.forEach((c) => {
           const card = document.createElement("div");
-          card.className = "contact-card";
+          const isSelected = selectedContactId === c.id;
+          card.className = "contact-card" + (isSelected ? " selected-card" : "");
+          const displayName = c.name || c.subname || "（氏名未入力）";
+          const zipDisplay = c.zip ? `〒${formatZipHyphen(c.zip)}` : "〒未設定";
           card.innerHTML = `
             <div class="contact-top">
-              <span class="contact-name">${c.name} ${c.honorific || ""}</span>
-              <span class="contact-type-tag">${c.role === "from" ? "ご依頼主用" : "お届け先用"}</span>
+              <span class="contact-name">${displayName}</span>
+              <span class="contact-zip-badge">${zipDisplay}</span>
             </div>
-            ${c.subname ? `<div class="contact-detail" style="font-weight:700;">${c.subname}</div>` : ""}
-            <div class="contact-detail">〒${formatZipHyphen(c.zip)} ${c.address}</div>
+            ${c.subname && c.name ? `<div class="contact-detail" style="font-weight:700;">${c.subname}</div>` : ""}
+            <div class="contact-detail">${c.address || "（住所未入力）"}${c.tel ? ` / TEL: ${c.tel}` : ""}</div>
+            <div class="contact-select-prompt">
+              <div class="contact-select-title">記載先を選択してください</div>
+              <div class="contact-select-btns">
+                <button type="button" class="btn btn-accent btn-sm prompt-to-btn" style="justify-content:center;">📮 お届け先に記載</button>
+                <button type="button" class="btn btn-outline btn-sm prompt-from-btn" style="justify-content:center; border-color:var(--lp-blue); color:var(--lp-blue);">👤 ご依頼主に記載</button>
+              </div>
+            </div>
             <div class="contact-actions">
-              <button type="button" class="btn btn-accent btn-sm to-btn">お届け先にセット</button>
-              <button type="button" class="btn btn-outline btn-sm from-btn">ご依頼主にセット</button>
+              <button type="button" class="btn btn-accent btn-sm to-btn">お届け先へ記載</button>
+              <button type="button" class="btn btn-outline btn-sm from-btn">ご依頼主へ記載</button>
               <button type="button" class="btn btn-outline btn-sm del-btn" style="margin-left:auto; color:#dc2626;">削除</button>
             </div>
           `;
-          card.querySelector(".to-btn").addEventListener("click", () => { setFieldState("to", c); showToast(`「${c.name}」をお届け先にセットしました`); });
-          card.querySelector(".from-btn").addEventListener("click", () => { setFieldState("from", c); showToast(`「${c.name}」をご依頼主にセットしました`); });
-          card.querySelector(".del-btn").addEventListener("click", () => {
-            memoryContacts = memoryContacts.filter((item) => item.id !== c.id);
+          const applyToLabel = (targetPrefix) => {
+            setFieldState(targetPrefix, c);
+            selectedContactId = null;
             renderAddressBook();
-            showToast(`「${c.name}」を一覧から削除しました（「📥 JSON保存」でファイルへ反映できます）`);
+            showToast(`「${displayName}」を${targetPrefix === "to" ? "お届け先" : "ご依頼主"}に記載しました`);
+          };
+          card.addEventListener("click", () => {
+            selectedContactId = (selectedContactId === c.id) ? null : c.id;
+            renderAddressBook();
+          });
+          card.querySelector(".to-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            applyToLabel("to");
+          });
+          card.querySelector(".from-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            applyToLabel("from");
+          });
+          card.querySelector(".prompt-to-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            applyToLabel("to");
+          });
+          card.querySelector(".prompt-from-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            applyToLabel("from");
+          });
+          card.querySelector(".del-btn").addEventListener("click", (e) => {
+            e.stopPropagation();
+            memoryContacts = memoryContacts.filter((item) => item.id !== c.id);
+            if (selectedContactId === c.id) selectedContactId = null;
+            saveAddressBookToCache();
+            renderAddressBook();
+            showToast(`「${displayName}」をアドレス帳から削除しました`);
           });
           container.appendChild(card);
         });
@@ -1888,6 +2083,7 @@
 
       function initApp() {
         initFallbackPostal();
+        loadAddressBookFromCache();
         setupZipBoxes("to", (z) => autoFillAddressFromZip("to", z, false));
         setupZipBoxes("from", (z) => autoFillAddressFromZip("from", z, false));
 
@@ -1932,6 +2128,14 @@
 
         const abFilter = document.getElementById("address-book-filter");
         if (abFilter) abFilter.addEventListener("input", renderAddressBook);
+        const clearFilterBtn = document.getElementById("btn-clear-book-filter");
+        if (clearFilterBtn && abFilter) {
+          clearFilterBtn.addEventListener("click", () => {
+            abFilter.value = "";
+            renderAddressBook();
+            abFilter.focus();
+          });
+        }
 
         document.querySelectorAll(".tab-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
@@ -2087,25 +2291,15 @@
         });
 
         document.getElementById("btn-save-to-contact").addEventListener("click", () => {
-          const f = getFieldState("to");
-          if (!f.name && !f.subname && !f.address) {
-            showToast("お届け先の氏名または住所を入力してから保存してください");
-            return;
-          }
-          memoryContacts.unshift({ id: "c" + Date.now(), role: "to", ...f });
-          renderAddressBook();
-          exportAddressBookJsonFile();
+          registerCurrentContactsToAddressBook("to");
         });
         document.getElementById("btn-save-from-contact").addEventListener("click", () => {
-          const f = getFieldState("from");
-          if (!f.name && !f.address) {
-            showToast("ご依頼主の氏名または住所を入力してから保存してください");
-            return;
-          }
-          memoryContacts.unshift({ id: "c" + Date.now(), role: "from", ...f });
-          renderAddressBook();
-          exportAddressBookJsonFile();
+          registerCurrentContactsToAddressBook("from");
         });
+        const bookRegBtn = document.getElementById("btn-book-register-current");
+        if (bookRegBtn) {
+          bookRegBtn.addEventListener("click", () => registerCurrentContactsToAddressBook(null));
+        }
 
         const jsonFileInput = document.getElementById("json-file-input");
         let loadAddressBookOnlyMode = false;
