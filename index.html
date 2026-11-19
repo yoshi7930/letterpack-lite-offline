@@ -1112,14 +1112,14 @@
         return bestMatch;
       }
 
-      function fetchZipcloudJsonp(zip7) {
+      function fetchJsonp(baseUrl, callbackParam = "callback", timeoutMs = 4500) {
         return new Promise((resolve) => {
-          const cbName = "__zipcloud_cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+          const cbName = "__jp_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
           const script = document.createElement("script");
-          let timer = setTimeout(() => {
+          const timer = setTimeout(() => {
             cleanup();
             resolve(null);
-          }, 4500);
+          }, timeoutMs);
           function cleanup() {
             clearTimeout(timer);
             try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
@@ -1133,9 +1133,14 @@
             cleanup();
             resolve(null);
           };
-          script.src = `https://zipcloud.ibsnet.co.jp/api/search?zipcode=${encodeURIComponent(zip7)}&callback=${cbName}`;
+          const sep = baseUrl.includes("?") ? "&" : "?";
+          script.src = `${baseUrl}${sep}${callbackParam}=${cbName}`;
           document.head.appendChild(script);
         });
+      }
+
+      function fetchHeartRailsJsonp(queryString) {
+        return fetchJsonp(`https://geoapi.heartrails.com/api/json?${queryString}`, "jsonp", 4500);
       }
 
       async function fetchAddressFromZipOnline(rawZip) {
@@ -1150,7 +1155,7 @@
             if (res.ok) data = await res.json();
           } catch (_) {}
           if (!data) {
-            data = await fetchZipcloudJsonp(clean);
+            data = await fetchJsonp(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${encodeURIComponent(clean)}`, "callback", 4500);
           }
           if (data && Array.isArray(data.results) && data.results.length > 0) {
             const items = [];
@@ -1162,25 +1167,22 @@
           }
         }
 
-        // 2. HeartRails Geo API (3〜7桁の前方一致・完全一致)
+        // 2. HeartRails Geo API (JSONP対応: 3〜7桁の前方一致・完全一致)
         try {
-          const res2 = await fetch(`https://geoapi.heartrails.com/api/json?method=searchByPostal&postal=${clean}`);
-          if (res2.ok) {
-            const data2 = await res2.json();
-            const locs = data2 && data2.response && data2.response.location;
-            if (Array.isArray(locs) && locs.length > 0) {
-              const items = [];
-              const seen = new Set();
-              locs.forEach((loc) => {
-                if (clean.length === 7 && loc.postal && loc.postal !== clean) return;
-                const entry = addRecordToCache(loc.postal || clean, loc.prefecture, loc.city, loc.town);
-                if (entry && !seen.has(entry.zip + entry.full)) {
-                  seen.add(entry.zip + entry.full);
-                  items.push(entry);
-                }
-              });
-              if (items.length > 0) return items;
-            }
+          const data2 = await fetchHeartRailsJsonp(`method=searchByPostal&postal=${encodeURIComponent(clean)}`);
+          const locs = data2 && data2.response && data2.response.location;
+          if (Array.isArray(locs) && locs.length > 0) {
+            const items = [];
+            const seen = new Set();
+            locs.forEach((loc) => {
+              if (clean.length === 7 && loc.postal && loc.postal !== clean) return;
+              const entry = addRecordToCache(loc.postal || clean, loc.prefecture, loc.city, loc.town);
+              if (entry && !seen.has(entry.zip + entry.full)) {
+                seen.add(entry.zip + entry.full);
+                items.push(entry);
+              }
+            });
+            if (items.length > 0) return items;
           }
         } catch (_) {}
 
@@ -1198,79 +1200,94 @@
         return s.trim();
       }
 
+      function extractAddressKeywords(rawAddr) {
+        const stripped = stripStreetNumbersForLookup(rawAddr);
+        const noPref = stripped.replace(/^(北海道|東京都|大阪府|京都府|.{2,3}県)/, "");
+        // 市区町村と町域に分割できる場合は町域単体や市区町村単体も候補に加える
+        const m = noPref.match(/^(.+?[市区町村郡])(.+)$/);
+        const townOnly = m && m[2] ? m[2].trim() : "";
+        const cityOnly = m && m[1] ? m[1].trim() : "";
+        return Array.from(new Set([
+          stripped,
+          noPref,
+          townOnly,
+          cityOnly,
+          rawAddr.replace(/[0-9０-９\-ー－番地号\s　]+.*$/, "").trim()
+        ])).filter((q) => q && q.length >= 2);
+      }
+
       async function fetchZipFromAddressOnline(rawAddr) {
         if (!rawAddr || !rawAddr.trim()) return [];
         const original = rawAddr.trim();
-        const stripped = stripStreetNumbersForLookup(original);
-        const candidates = Array.from(new Set([
-          stripped,
-          original.replace(/[0-9０-９\-ー－番地号\s　]+.*$/, "").trim(),
-          original.split(/[\s　]/)[0].trim()
-        ])).filter((q) => q.length >= 2);
+        const candidates = extractAddressKeywords(original);
 
         const found = [];
         const seen = new Set();
 
-        // 1. HeartRails Geo API (method=suggest, matching=like)
-        for (const kw of candidates) {
-          try {
-            const url = `https://geoapi.heartrails.com/api/json?method=suggest&matching=like&keyword=${encodeURIComponent(kw)}`;
-            const res = await fetch(url);
-            if (res.ok) {
-              const data = await res.json();
-              const locs = data && data.response && data.response.location;
-              if (Array.isArray(locs) && locs.length > 0) {
-                locs.forEach((loc) => {
-                  const entry = addRecordToCache(loc.postal, loc.prefecture, loc.city, loc.town);
-                  if (entry && !seen.has(entry.zip + entry.full)) {
-                    seen.add(entry.zip + entry.full);
-                    found.push(entry);
-                  }
-                });
-                if (found.length > 0) break;
-              }
-            }
-          } catch (_) {}
-        }
-
-        // 2. 国土地理院 ジオコーディングAPI → 緯度経度から HeartRails searchByGeoLocation で郵便番号を特定
-        if (found.length === 0) {
-          try {
-            const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(original)}`);
-            if (gsiRes.ok) {
-              const gsiData = await gsiRes.json();
-              if (Array.isArray(gsiData) && gsiData.length > 0) {
-                const coords = gsiData[0].geometry && gsiData[0].geometry.coordinates;
+        // 1. 国土地理院 ジオコーディングAPI (CORS対応) → 緯度経度から HeartRails searchByGeoLocation (JSONP) で郵便番号を特定
+        // 「東京都港区虎ノ門1-2-3」や「札幌市北区」のような複合住所にもっとも強い
+        try {
+          const gsiQuery = stripStreetNumbersForLookup(original) || original;
+          const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(gsiQuery)}`);
+          if (gsiRes.ok) {
+            const gsiData = await gsiRes.json();
+            if (Array.isArray(gsiData) && gsiData.length > 0) {
+              // 上位最大3件の座標から周辺の郵便番号を取得
+              const topItems = gsiData.slice(0, 3);
+              for (const item of topItems) {
+                const coords = item.geometry && item.geometry.coordinates;
                 if (Array.isArray(coords) && coords.length >= 2) {
                   const lon = coords[0];
                   const lat = coords[1];
-                  const geoRes = await fetch(`https://geoapi.heartrails.com/api/json?method=searchByGeoLocation&x=${lon}&y=${lat}`);
-                  if (geoRes.ok) {
-                    const geoData = await geoRes.json();
-                    const locs = geoData && geoData.response && geoData.response.location;
-                    if (Array.isArray(locs) && locs.length > 0) {
-                      locs.forEach((loc) => {
-                        const entry = addRecordToCache(loc.postal, loc.prefecture, loc.city, loc.town);
-                        if (entry && !seen.has(entry.zip + entry.full)) {
-                          seen.add(entry.zip + entry.full);
-                          found.push(entry);
-                        }
-                      });
-                    }
+                  const geoData = await fetchHeartRailsJsonp(`method=searchByGeoLocation&x=${encodeURIComponent(lon)}&y=${encodeURIComponent(lat)}`);
+                  const locs = geoData && geoData.response && geoData.response.location;
+                  if (Array.isArray(locs) && locs.length > 0) {
+                    locs.forEach((loc) => {
+                      const entry = addRecordToCache(loc.postal, loc.prefecture, loc.city, loc.town);
+                      if (entry && !seen.has(entry.zip + entry.full)) {
+                        seen.add(entry.zip + entry.full);
+                        found.push(entry);
+                      }
+                    });
                   }
                 }
               }
+            }
+          }
+        } catch (_) {}
+
+        // 2. HeartRails Geo API (method=suggest, matching=like, JSONP対応)
+        for (const kw of candidates) {
+          try {
+            const data = await fetchHeartRailsJsonp(`method=suggest&matching=like&keyword=${encodeURIComponent(kw)}`);
+            const locs = data && data.response && data.response.location;
+            if (Array.isArray(locs) && locs.length > 0) {
+              locs.forEach((loc) => {
+                const entry = addRecordToCache(loc.postal, loc.prefecture, loc.city, loc.town);
+                if (entry && !seen.has(entry.zip + entry.full)) {
+                  seen.add(entry.zip + entry.full);
+                  found.push(entry);
+                }
+              });
+              if (found.length >= 5) break;
             }
           } catch (_) {}
         }
 
         if (found.length > 0) {
           // 入力された住所により長く一致する候補を優先ソート
-          const cleanOrig = original.replace(/[\s　]/g, "");
+          const cleanOrig = stripStreetNumbersForLookup(original).replace(/[\s　]/g, "");
           found.sort((a, b) => {
-            const aMatch = cleanOrig.includes(a.full) ? a.full.length + 100 : cleanOrig.includes(a.city + a.town) ? (a.city + a.town).length + 50 : 0;
-            const bMatch = cleanOrig.includes(b.full) ? b.full.length + 100 : cleanOrig.includes(b.city + b.town) ? (b.city + b.town).length + 50 : 0;
-            return bMatch - aMatch;
+            const score = (rec) => {
+              let s = 0;
+              if (cleanOrig.includes(rec.full)) s += rec.full.length + 200;
+              if (cleanOrig.includes(rec.city + rec.town)) s += (rec.city + rec.town).length + 120;
+              if (rec.town && cleanOrig.includes(rec.town)) s += rec.town.length + 60;
+              if (rec.city && cleanOrig.includes(rec.city)) s += rec.city.length + 30;
+              if (rec.pref && cleanOrig.includes(rec.pref)) s += 15;
+              return s;
+            };
+            return score(b) - score(a);
           });
           return found;
         }
@@ -1987,22 +2004,27 @@
 
         const qInput = document.getElementById("universal-postal-query");
         let searchTimer = null;
+        let universalSearchSeq = 0;
         const runSearch = async () => {
           const q = qInput.value.trim();
           if (!q) return;
+          const mySeq = ++universalSearchSeq;
           const container = document.getElementById("postal-search-results");
           if (container) {
             container.innerHTML = `<div style="padding:0.75rem; font-size:0.78rem; color:#005bab; text-align:center; font-weight:700;">🌐 ネットから「${q}」を検索中...</div>`;
           }
-          const d = normalizeDigits(q).replace(/[^0-9]/g, "");
-          const results = d.length >= 3
+          const normalizedQ = normalizeDigits(q);
+          const isZipQuery = /^〒?\s*[0-9]{3}[-ー－\s]?[0-9]{0,4}$/.test(normalizedQ);
+          const d = normalizedQ.replace(/[^0-9]/g, "");
+          const results = (isZipQuery && d.length >= 3)
             ? await fetchAddressFromZipOnline(d)
             : await fetchZipFromAddressOnline(q);
+          if (mySeq !== universalSearchSeq) return;
           renderSearchResults(results);
         };
         qInput.addEventListener("input", () => {
           if (searchTimer) clearTimeout(searchTimer);
-          searchTimer = setTimeout(runSearch, 280);
+          searchTimer = setTimeout(runSearch, 300);
         });
         qInput.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
