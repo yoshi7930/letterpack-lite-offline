@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>レターパックライト 宛名ラベル作成・PDF印刷ソフト（実物デザイン完全再現・オフライン対応）</title>
+  <style>
+    :root {
+      --lp-blue: #005bab;
+      --lp-blue-deep: #004687;
+      --lp-blue-mid: #5b82b8;
+      --lp-blue-pale: #d3dff0;
+      --lp-blue-tint: #eef3fa;
+      --lp-red: #d7262b;
+      --lp-red-pale: #fdeeee;
+      --lp-gray-box: #e5e8ec;
+      --lp-ink: #111827;
+      --bg-app: #eef2f6;
+      --bg-panel: #ffffff;
+      --bg-subtle: #f8fafc;
+      --border-color: #cbd5e1;
+      --border-subtle: #e2e8f0;
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --offset-x: 0mm;
+      --offset-y: 0mm;
+      --print-scale: 1;
+      --to-addr-size: 14.5pt;
+      --to-name-size: 18.5pt;
+      --from-addr-size: 10pt;
+      --from-name-size: 12pt;
+      --contents-size: 11.5pt;
+      --label-font: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", "Noto Sans JP", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background-color: var(--bg-app); color: var(--text-main);
+      font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .app-header {
+      background: linear-gradient(135deg, var(--lp-blue-deep) 0%, var(--lp-blue) 100%);
+      color: #ffffff; padding: 0.7rem 1.2rem;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12); position: sticky; top: 0; z-index: 100;
+    }
+    .header-inner {
+      max-width: 1500px; margin: 0 auto;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;
+    }
+    .brand-group { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-badge {
+      background: #ffffff; color: var(--lp-blue); font-weight: 900; font-size: 0.85rem;
+      padding: 0.3rem 0.65rem; border-radius: 4px; letter-spacing: 0.04em;
+    }
+    .brand-title { margin: 0; font-size: 1.1rem; font-weight: 800; }
+    .brand-subtitle { font-size: 0.74rem; opacity: 0.92; display: block; }
+    .db-status-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.74rem;
+      background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.28rem 0.65rem; border-radius: 999px; color: #ffffff; font-weight: 600;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 6px #34d399; }
+    .header-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+      font-family: inherit; font-size: 0.82rem; font-weight: 700;
+      padding: 0.5rem 0.85rem; border-radius: 6px; border: 1px solid transparent;
+      cursor: pointer; transition: all 0.15s ease; text-decoration: none; white-space: nowrap;
+    }
+    .btn-primary { background: #ffffff; color: var(--lp-blue-deep); box-shadow: 0 2px 6px rgba(0,0,0,0.18); }
+    .btn-primary:hover { background: #f0f9ff; }
+    .btn-accent { background: var(--lp-blue); color: #ffffff; }
+    .btn-accent:hover { background: var(--lp-blue-deep); }
+    .btn-outline { background: var(--bg-panel); color: var(--text-main); border-color: var(--border-color); }
+    .btn-outline:hover { background: var(--bg-subtle); border-color: var(--lp-blue); color: var(--lp-blue); }
+    .btn-ghost-light { background: rgba(255,255,255,0.15); color: #ffffff; border-color: rgba(255,255,255,0.3); }
+    .btn-ghost-light:hover { background: rgba(255,255,255,0.26); }
+    .btn-sm { font-size: 0.74rem; padding: 0.3rem 0.6rem; }
+    .workspace {
+      max-width: 1500px; margin: 0 auto; padding: 1.15rem;
+      display: grid; grid-template-columns: 1fr 430px; gap: 1.25rem; align-items: start;
+    }
+    @media (max-width: 1200px) { .workspace { grid-template-columns: 1fr; } }
+    .preview-stage { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+    .stage-toolbar {
+      width: 100%; max-width: 210mm; background: var(--bg-panel); border: 1px solid var(--border-subtle);
+      border-radius: 10px; padding: 0.6rem 0.95rem;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    .stage-hint { display: flex; align-items: center; gap: 0.45rem; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; }
+    .stage-hint-badge { background: #e0f2fe; color: var(--lp-blue-deep); padding: 0.18rem 0.45rem; border-radius: 4px; font-size: 0.72rem; font-weight: 800; }
+    .mode-switch-group { display: inline-flex; background: var(--bg-subtle); padding: 3px; border-radius: 6px; border: 1px solid var(--border-color); }
+    .mode-btn { border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 0.75rem; font-weight: 700; padding: 0.32rem 0.6rem; border-radius: 4px; cursor: pointer; }
+    .mode-btn.active { background: var(--lp-blue); color: #ffffff; }
+    .sheet-scroll-container { width: 100%; overflow-x: auto; display: flex; justify-content: center; padding: 0.2rem 0.2rem 1rem; }
+    .a4-sheet {
+      width: 210mm; min-height: 297mm; background: #ffffff;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08);
+      position: relative; padding: 6mm 10mm;
+      display: flex; flex-direction: column; align-items: center;
+      font-family: var(--label-font); color: var(--lp-ink);
+    }
+    .lp-envelope {
+      width: 190mm; min-height: 282mm; background: #ffffff; position: relative;
+      transform: translate(var(--offset-x), var(--offset-y)) scale(var(--print-scale));
+      transform-origin: top center; border: 1px solid #cbd5e1;
+      display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
+    }
+    .lp-blue-ribbon {
+      background: var(--lp-blue); color: #ffffff; height: 7.2mm;
+      display: flex; align-items: center; justify-content: space-around; padding: 0 3mm;
+      font-size: 7.5pt; font-weight: 900; letter-spacing: 0.04em; font-style: italic; user-select: none;
+    }
+    .lp-envelope-body { flex: 1; padding: 3.5mm 6.5mm 2.5mm 6.5mm; display: flex; flex-direction: column; justify-content: space-between; }
+    .lp-top-zip-row { display: flex; align-items: center; justify-content: flex-end; gap: 3mm; margin-top: 1.2mm; margin-bottom: 10.5mm; padding-right: 0.5mm; }
+    .top-zip-boxes { display: flex; align-items: center; gap: 1.4mm; }
+    .top-zip-box {
+      width: 8.6mm; height: 11.5mm; border: 1.5px solid var(--lp-red); background: #ffffff;
+      text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace;
+      font-size: 18pt; font-weight: 800; color: var(--lp-ink); padding: 0; outline: none;
+    }
+    .top-zip-box.first-3 { border-width: 2.1px; }
+    .top-zip-box:focus { background: #fffbeb; box-shadow: 0 0 0 2px rgba(215, 38, 43, 0.25); }
+    .top-zip-hyphen { width: 2.6mm; height: 1.8px; background: var(--lp-red); margin: 0 0.2mm; }
+    .lp-two-col-grid { display: grid; grid-template-columns: 37mm 1fr 3.5mm; gap: 2.5mm; align-items: start; margin-top: 0; }
+    .lp-left-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding-top: 23.2mm; }
+    .lp-stamp-430 {
+      width: 31mm; background: var(--lp-blue); color: #ffffff; padding: 2mm 2.2mm 1.6mm;
+      display: flex; flex-direction: column; align-items: center; position: relative; user-select: none; border: 1px solid var(--lp-blue);
+    }
+    .stamp-line-1 { font-size: 8.2pt; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; width: 100%; text-align: center; font-style: italic; }
+    .stamp-line-2 { font-size: 15.5pt; font-weight: 900; letter-spacing: 0.04em; line-height: 1.08; width: 100%; text-align: center; font-style: italic; }
+    .stamp-line-price { font-size: 24pt; font-weight: 900; line-height: 1; letter-spacing: -0.02em; margin: 0.6mm 0 1mm; font-family: "Arial Black", "Helvetica Neue", sans-serif; }
+    .stamp-bottom-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 5.5pt; font-weight: 800; border-top: 0.8px solid rgba(255,255,255,0.5); padding-top: 0.6mm; }
+    .stamp-cancel-lines { position: absolute; bottom: -1.5mm; right: 1mm; width: 9mm; height: 9mm; pointer-events: none; }
+    .fold-dotted-notice { margin-top: 56mm; width: 100%; text-align: center; font-size: 4.8pt; color: #64748b; line-height: 1.3; border-bottom: 1px dotted #94a3b8; padding-bottom: 1mm; }
+    .lp-center-col { display: flex; flex-direction: column; width: 100%; }
+    .lp-address-table-outer { position: relative; border: 1.6px solid #111827; background: #ffffff; }
+    .lp-row-to { display: grid; grid-template-columns: 23mm 1fr; border-bottom: 1.4px solid #111827; min-height: 55mm; }
+    .lp-sidebar-to {
+      background: var(--lp-blue-mid); color: #ffffff; border-right: 1.2px solid #111827;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 5.5mm; position: relative; user-select: none;
+    }
+    .sidebar-jp-label { font-size: 7.5pt; font-weight: 900; letter-spacing: 0.05em; }
+    .sidebar-en-label { font-size: 16pt; font-weight: 900; line-height: 1.05; font-family: "Arial", "Helvetica", sans-serif; }
+    .to-up-arrow-svg { width: 14mm; height: 22mm; margin-top: auto; margin-bottom: -0.5mm; display: block; }
+    .lp-fields-to { padding: 1.8mm 3mm 1.5mm; display: flex; flex-direction: column; justify-content: space-between; }
+    .field-head-bar { display: flex; align-items: flex-start; justify-content: space-between; }
+    .bilingual-label { display: flex; flex-direction: column; line-height: 1.15; color: #111827; user-select: none; }
+    .bilingual-label .lbl-jp { font-size: 6.5pt; font-weight: 800; }
+    .bilingual-label .lbl-en { font-size: 5.8pt; font-weight: 700; font-family: "Arial", sans-serif; }
+    .address-lines-wrap { position: relative; margin: 0.5mm 0 1mm; }
+    .canvas-editable {
+      width: 100%; border: none; background: transparent; color: var(--lp-ink);
+      font-family: var(--label-font); outline: none; resize: none; padding: 0.3mm 1mm; border-radius: 2px;
+    }
+    .canvas-editable:hover { background: rgba(0, 91, 171, 0.04); }
+    .canvas-editable:focus { background: #fffef0; box-shadow: inset 0 0 0 1.4px var(--lp-blue); }
+    .canvas-editable::placeholder { color: #94a3b8; font-weight: 400; opacity: 0.7; }
+    .to-address-textarea {
+      font-size: var(--to-addr-size); font-weight: 700; line-height: 9mm; height: 18.5mm;
+      background-image: linear-gradient(to right, #94a3b8 40%, transparent 0%), linear-gradient(to right, #94a3b8 40%, transparent 0%);
+      background-position: 0 8.8mm, 0 17.8mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
+    }
+    .name-block-wrap { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 2mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 0.8mm; min-height: 16mm; }
+    .name-inputs-stack { display: flex; flex-direction: column; gap: 0.4mm; }
+    .subname-input { font-size: calc(var(--to-name-size) * 0.56); font-weight: 600; height: 5.5mm; }
+    .mainname-input { font-size: var(--to-name-size); font-weight: 800; line-height: 1.2; min-height: 9.5mm; }
+    .sama-select {
+      appearance: none; -webkit-appearance: none; border: 1px dashed transparent; background: transparent;
+      font-family: var(--label-font); font-size: 13.5pt; font-weight: 800; color: #111827; padding: 0.2mm 1mm; cursor: pointer; text-align: right;
+    }
+    .tel-line-row { display: flex; align-items: center; justify-content: space-between; padding-top: 0.8mm; }
+    .tel-brackets-wrap { display: flex; align-items: center; gap: 1.5mm; font-size: 11pt; color: #111827; margin-right: 12mm; }
+    .tel-input-field { width: 46mm; text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 10.5pt; font-weight: 700; }
+    .lp-row-from { display: grid; grid-template-columns: 23mm 1fr; border-bottom: 1.4px solid #111827; min-height: 40mm; }
+    .lp-sidebar-from {
+      background: var(--lp-blue-pale); color: #111827; border-right: 1.2px solid #111827;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 1.5mm; user-select: none;
+    }
+    .from-arrow-tail { display: flex; flex-direction: column; gap: 1.1mm; margin-bottom: 2.5mm; }
+    .tail-sq { width: 3.4mm; height: 1.5mm; background: var(--lp-blue); }
+    .lp-fields-from { padding: 1.4mm 3mm 1.2mm; display: flex; flex-direction: column; justify-content: space-between; }
+    .from-top-bar { display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
+    .from-addr-zip-group { display: flex; align-items: center; gap: 3mm; }
+    .from-zip-boxes { display: flex; align-items: center; gap: 0.7mm; }
+    .from-zip-box {
+      width: 4.5mm; height: 6.2mm; border: 1px solid #94a3b8; background: #ffffff;
+      text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 10.5pt; font-weight: 700; color: var(--lp-ink); padding: 0; outline: none;
+    }
+    .from-zip-hyphen { width: 1.6mm; height: 1px; background: #94a3b8; }
+    .from-address-textarea {
+      font-size: var(--from-addr-size); font-weight: 600; line-height: 6.4mm; height: 13mm;
+      background-image: linear-gradient(to right, #94a3b8 40%, transparent 0%), linear-gradient(to right, #94a3b8 40%, transparent 0%);
+      background-position: 0 6.2mm, 0 12.6mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
+    }
+    .from-name-block { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 2mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 0.5mm; min-height: 9.5mm; }
+    .from-name-input { font-size: var(--from-name-size); font-weight: 700; }
+    .lp-row-contents { padding: 1.5mm 2.8mm 1.5mm; display: flex; flex-direction: column; justify-content: space-between; min-height: 22mm; }
+    .contents-top-line { display: flex; align-items: flex-start; gap: 2mm; }
+    .contents-bilingual { display: flex; align-items: baseline; gap: 1mm; white-space: nowrap; user-select: none; }
+    .contents-bilingual .cb-jp { font-size: 8.5pt; font-weight: 900; }
+    .contents-bilingual .cb-en { font-size: 6pt; font-weight: 700; line-height: 1.05; display: inline-block; }
+    .contents-note-text { font-size: 5pt; line-height: 1.25; color: #111827; user-select: none; }
+    .contents-main-input-row { display: flex; align-items: center; gap: 2mm; margin: 0.6mm 0; }
+    .contents-input-field { font-size: var(--contents-size); font-weight: 800; height: 7.5mm; border-bottom: 1px dotted #94a3b8; }
+    .contents-bottom-warn-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5mm; margin-top: 0.5mm; }
+    .fraud-red-warning { color: var(--lp-red); font-size: 5.2pt; font-weight: 800; line-height: 1.28; user-select: none; }
+    .hazard-checkboxes { display: flex; align-items: center; gap: 1.8mm; color: var(--lp-red); font-size: 5.4pt; font-weight: 800; white-space: nowrap; }
+    .hazard-chk-label { display: inline-flex; align-items: center; gap: 0.5mm; cursor: pointer; }
+    .hazard-chk-label input { width: 2.8mm; height: 2.8mm; margin: 0; accent-color: var(--lp-red); }
+    .lp-right-edge-notes { writing-mode: vertical-rl; font-size: 4.5pt; color: #475569; line-height: 1.25; letter-spacing: 0.02em; display: flex; justify-content: space-between; height: 118mm; margin-top: 23.2mm; user-select: none; }
+    .lp-unified-cutout-unit {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .lp-howto-row { margin-top: 2mm; display: grid; grid-template-columns: 6mm repeat(5, 1fr); gap: 1.5mm; align-items: stretch; user-select: none; }
+    .howto-vertical-pill { background: var(--lp-blue); color: #ffffff; border-radius: 1.5mm; writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; font-size: 6.5pt; font-weight: 900; letter-spacing: 0.12em; padding: 1mm 0; }
+    .howto-step-card { border: 1.3px solid var(--lp-blue); border-radius: 1.8mm; padding: 1mm 1.2mm; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; min-height: 18.5mm; }
+    .howto-step-card.filled-blue { background: var(--lp-blue); color: #ffffff; }
+    .step-head { display: flex; align-items: baseline; gap: 1mm; line-height: 1.1; }
+    .step-num { font-size: 9.5pt; font-weight: 900; color: var(--lp-blue); font-family: "Arial Black", sans-serif; }
+    .howto-step-card.filled-blue .step-num { color: #ffffff; }
+    .step-title { font-size: 5.5pt; font-weight: 800; }
+    .step-icon-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0.5mm 0; }
+    .step-foot { font-size: 5pt; font-weight: 800; text-align: center; color: var(--lp-blue); }
+    .howto-step-card.filled-blue .step-foot { color: #ffffff; }
+    .lp-peel-section { margin-top: 2mm; display: grid; grid-template-columns: 1.15fr 1fr; gap: 2mm; align-items: stretch; }
+    .peel-left-col { display: flex; flex-direction: column; }
+    .peel-top-caption { text-align: center; font-size: 8.5pt; font-weight: 900; color: var(--lp-blue); letter-spacing: 0.1em; margin-bottom: 0.8mm; user-select: none; }
+    .peel-sticker-box { border: 1.6px solid #0284c7; border-radius: 2.5mm; background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 45%, #ffffff 45%); padding: 1.2mm 2mm; display: grid; grid-template-columns: 6mm 1fr; gap: 1.5mm; align-items: center; }
+    .peel-tab-text { writing-mode: vertical-rl; color: #ffffff; font-size: 6.5pt; font-weight: 900; letter-spacing: 0.1em; text-align: center; user-select: none; }
+    .peel-sticker-inner { background: #ffffff; border-radius: 1.5mm; padding: 1.2mm 2mm; display: flex; flex-direction: column; gap: 0.8mm; }
+    .peel-qr-and-num { display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
+    .qr-placeholder-svg { width: 9mm; height: 9mm; flex-shrink: 0; }
+    .peel-tracking-info { flex: 1; display: flex; flex-direction: column; align-items: flex-end; }
+    .peel-lp-tag { font-size: 5.5pt; font-weight: 800; color: #0284c7; align-self: flex-start; }
+    .tracking-input-clean { width: 38mm; border: none; background: transparent; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 9.5pt; font-weight: 800; text-align: right; color: #111827; outline: none; }
+    .peel-right-retain-box { background: var(--lp-blue); color: #ffffff; border-radius: 2mm; padding: 2mm 2.8mm; display: flex; flex-direction: column; justify-content: space-between; user-select: none; }
+    .retain-title-jp { font-size: 9pt; font-weight: 900; letter-spacing: 0.03em; }
+    .retain-title-en { font-size: 6pt; font-weight: 700; opacity: 0.95; }
+    .retain-contact-details { font-size: 5pt; line-height: 1.32; margin-top: 1mm; }
+    .lp-bottom-gray-card { margin-top: 2mm; background: var(--lp-gray-box); border-radius: 2.5mm; padding: 2.2mm 3.5mm; display: flex; flex-direction: column; gap: 1.5mm; }
+    .gray-card-top-row { display: grid; grid-template-columns: 1.15fr 1fr; gap: 3mm; align-items: center; }
+    .post-barcode-pill { background: #ffffff; border-radius: 2mm; padding: 1.2mm 2.5mm; display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
+    .pb-label { font-size: 5.2pt; font-weight: 800; color: #111827; line-height: 1.2; text-align: center; white-space: nowrap; }
+    .pb-barcode-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
+    .barcode-svg { width: 100%; height: 7mm; display: block; }
+    .pb-num-display { font-family: "Courier New", monospace; font-size: 7.8pt; font-weight: 800; letter-spacing: 0.08em; }
+    .attention-oval { background: var(--lp-blue); color: #ffffff; border-radius: 999px; padding: 1mm 4mm; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: fit-content; user-select: none; }
+    .attention-oval .att-jp { font-size: 7.5pt; font-weight: 900; line-height: 1.1; }
+    .attention-oval .att-en { font-size: 5.5pt; font-weight: 700; line-height: 1; }
+    .specs-3cm-4kg-row { display: flex; align-items: baseline; justify-content: space-between; gap: 3mm; user-select: none; }
+    .spec-limit-item { display: flex; align-items: baseline; gap: 1mm; }
+    .big-red-3 { font-size: 27pt; font-weight: 900; color: var(--lp-red); line-height: 0.9; font-family: "Arial Black", sans-serif; }
+    .big-black-4 { font-size: 27pt; font-weight: 900; color: #111827; line-height: 0.9; font-family: "Arial Black", sans-serif; }
+    .spec-limit-stack { display: flex; flex-direction: column; }
+    .spec-tag-pill { background: var(--lp-blue); color: #ffffff; font-size: 5.5pt; font-weight: 800; padding: 0.2mm 2mm; border-radius: 0.6mm; width: fit-content; margin-bottom: 0.3mm; }
+    .spec-unit-line { display: flex; align-items: baseline; gap: 1mm; }
+    .unit-cm-red { font-size: 11.5pt; font-weight: 900; color: var(--lp-red); }
+    .unit-kg-black { font-size: 11.5pt; font-weight: 900; color: #111827; }
+    .unit-en-sub { font-size: 5.2pt; font-weight: 800; color: var(--lp-blue); line-height: 1.1; }
+    .gray-card-foot-note { font-size: 5.5pt; font-weight: 800; color: var(--lp-blue); line-height: 1.3; user-select: none; }
+    .lp-bottom-title-bar { margin-top: 1.5mm; display: flex; align-items: baseline; justify-content: space-between; padding: 0 1mm; user-select: none; }
+    .tokutei-label { font-size: 7.5pt; font-weight: 800; color: #111827; }
+    .bottom-brand-logo { display: flex; align-items: baseline; gap: 2mm; color: var(--lp-blue); font-style: italic; }
+    .bottom-brand-logo .bbl-en { font-size: 7.5pt; font-weight: 900; letter-spacing: 0.04em; }
+    .bottom-brand-logo .bbl-jp { font-size: 14pt; font-weight: 900; letter-spacing: 0.02em; }
+    .inline-screen-tools { display: flex; align-items: center; gap: 1.2mm; }
+    .inline-tool-btn { background: #e0f2fe; color: var(--lp-blue-deep); border: 1px solid #93c5fd; border-radius: 3px; font-size: 7pt; font-weight: 700; padding: 0.7mm 1.8mm; cursor: pointer; }
+    .inline-tool-btn:hover { background: var(--lp-blue); color: #ffffff; }
+    .a4-sheet.cutout-box-mode .lp-blue-ribbon, .a4-sheet.cutout-box-mode .lp-left-col, .a4-sheet.cutout-box-mode .lp-right-edge-notes, .a4-sheet.cutout-box-mode .lp-howto-row, .a4-sheet.cutout-box-mode .lp-peel-section, .a4-sheet.cutout-box-mode .lp-bottom-gray-card, .a4-sheet.cutout-box-mode .lp-bottom-title-bar { visibility: hidden !important; }
+    .a4-sheet.cutout-box-mode .lp-envelope { border-color: transparent !important; }
+    .a4-sheet.cutout-box-mode .lp-address-table-outer { outline: none !important; }
+    .cut-guide-frame {
+      position: absolute;
+      pointer-events: none;
+      border: 1.4px dashed #475569;
+      border-radius: 1.5mm;
+      z-index: 25;
+      display: none;
+    }
+    .a4-sheet.show-cut-lines .cut-guide-frame,
+    .a4-sheet.cutout-box-mode .cut-guide-frame {
+      display: block;
+    }
+    .a4-sheet.hide-cut-lines .cut-guide-frame {
+      display: none !important;
+    }
+    .cut-guide-unified {
+      top: -2.8mm;
+      right: -2.8mm;
+      bottom: -2.8mm;
+      left: -2.8mm;
+    }
+    .cut-scissor-badge {
+      position: absolute;
+      background: #ffffff;
+      color: #334155;
+      font-size: 5.5pt;
+      font-weight: 800;
+      padding: 0 1.4mm;
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .cut-scissor-top { top: -2.1mm; left: 5mm; }
+    .cut-scissor-bottom { bottom: -2.1mm; right: 6mm; }
+    .cut-scissor-left {
+      left: -2.3mm; top: 50%;
+      transform: translateY(-50%);
+      writing-mode: vertical-rl;
+      padding: 1.2mm 0;
+    }
+    .cut-scissor-right {
+      right: -2.3mm; top: 50%;
+      transform: translateY(-50%);
+      writing-mode: vertical-rl;
+      padding: 1.2mm 0;
+    }
+    .crop-corner {
+      position: absolute;
+      width: 3.5mm;
+      height: 3.5mm;
+      border-color: #1e293b;
+      border-style: solid;
+    }
+    .crop-tl { top: -0.8px; left: -0.8px; border-width: 1.8px 0 0 1.8px; }
+    .crop-tr { top: -0.8px; right: -0.8px; border-width: 1.8px 1.8px 0 0; }
+    .crop-bl { bottom: -0.8px; left: -0.8px; border-width: 0 0 1.8px 1.8px; }
+    .crop-br { bottom: -0.8px; right: -0.8px; border-width: 0 1.8px 1.8px 0; }
+    .cutline-toggle-chip {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: #f1f5f9; border: 1px solid var(--border-color);
+      padding: 0.3rem 0.65rem; border-radius: 6px;
+      font-size: 0.76rem; font-weight: 800; color: var(--text-main);
+      cursor: pointer; user-select: none;
+    }
+    .cutline-toggle-chip input { margin: 0; accent-color: var(--lp-blue); cursor: pointer; }
+    .a4-sheet.text-only-mode .lp-envelope, .a4-sheet.text-only-mode .lp-address-table-outer, .a4-sheet.text-only-mode .lp-row-to, .a4-sheet.text-only-mode .lp-row-from, .a4-sheet.text-only-mode .top-zip-box, .a4-sheet.text-only-mode .from-zip-box, .a4-sheet.text-only-mode .name-block-wrap, .a4-sheet.text-only-mode .from-name-block, .a4-sheet.text-only-mode .contents-input-field { border-color: transparent !important; background: transparent !important; }
+    .a4-sheet.text-only-mode .to-address-textarea, .a4-sheet.text-only-mode .from-address-textarea { background-image: none !important; }
+    .a4-sheet.text-only-mode .lp-blue-ribbon, .a4-sheet.text-only-mode .lp-left-col, .a4-sheet.text-only-mode .lp-right-edge-notes, .a4-sheet.text-only-mode .lp-sidebar-to, .a4-sheet.text-only-mode .lp-sidebar-from, .a4-sheet.text-only-mode .bilingual-label, .a4-sheet.text-only-mode .top-zip-hyphen, .a4-sheet.text-only-mode .from-zip-hyphen, .a4-sheet.text-only-mode .contents-top-line, .a4-sheet.text-only-mode .contents-bottom-warn-row, .a4-sheet.text-only-mode .lp-howto-row, .a4-sheet.text-only-mode .lp-peel-section, .a4-sheet.text-only-mode .lp-bottom-gray-card, .a4-sheet.text-only-mode .lp-bottom-title-bar, .a4-sheet.text-only-mode .tel-brackets-wrap span { visibility: hidden !important; }
+    .control-sidebar { background: var(--bg-panel); border: 1px solid var(--border-subtle); border-radius: 14px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); overflow: hidden; position: sticky; top: 4.5rem; }
+    .sidebar-tabs { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--bg-subtle); border-bottom: 1px solid var(--border-color); }
+    .tab-btn { border: none; background: transparent; padding: 0.7rem 0.3rem; font-family: inherit; font-size: 0.76rem; font-weight: 800; color: var(--text-secondary); cursor: pointer; border-bottom: 3px solid transparent; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+    .tab-btn.active { color: var(--lp-blue); background: var(--bg-panel); border-bottom-color: var(--lp-blue); }
+    .tab-panel { display: none; padding: 1rem; max-height: calc(100vh - 9.5rem); overflow-y: auto; }
+    .tab-panel.active { display: block; }
+    .panel-section { margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--border-subtle); }
+    .panel-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.7rem; }
+    .section-title { margin: 0; font-size: 0.9rem; font-weight: 800; display: flex; align-items: center; gap: 0.4rem; }
+    .section-badge { font-size: 0.68rem; padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 800; background: #e0f2fe; color: var(--lp-blue-deep); }
+    .form-row { margin-bottom: 0.65rem; }
+    .form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-bottom: 0.65rem; }
+    .form-label { display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.25rem; }
+    .form-input, .form-select, .form-textarea { width: 100%; font-family: inherit; font-size: 0.84rem; padding: 0.45rem 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-panel); color: var(--text-main); }
+    .input-with-btn { display: flex; gap: 0.35rem; }
+    .search-results-box { margin-top: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; max-height: 210px; overflow-y: auto; background: var(--bg-subtle); }
+    .search-result-item { padding: 0.48rem 0.65rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 0.45rem; font-size: 0.78rem; cursor: pointer; background: var(--bg-panel); }
+    .search-result-item:hover { background: var(--lp-blue-tint); }
+    .res-zip { font-family: monospace; font-weight: 800; color: var(--lp-red); background: var(--lp-red-pale); padding: 0.1rem 0.35rem; border-radius: 3px; white-space: nowrap; }
+    .res-addr { flex: 1; font-weight: 600; }
+    .res-actions { display: flex; gap: 0.25rem; }
+    .address-book-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; }
+    .contact-card { border: 1px solid var(--border-color); border-radius: 6px; padding: 0.6rem 0.7rem; background: var(--bg-panel); display: flex; flex-direction: column; gap: 0.3rem; }
+    .contact-top { display: flex; align-items: center; justify-content: space-between; }
+    .contact-name { font-weight: 800; font-size: 0.86rem; }
+    .contact-type-tag { font-size: 0.66rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 3px; background: #e0f2fe; color: var(--lp-blue-deep); }
+    .contact-detail { font-size: 0.75rem; color: var(--text-secondary); }
+    .contact-actions { display: flex; gap: 0.3rem; margin-top: 0.2rem; }
+    .slider-row { margin-bottom: 0.7rem; }
+    .slider-header { display: flex; justify-content: space-between; font-size: 0.76rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.2rem; }
+    .slider-val { font-family: monospace; font-weight: 800; color: var(--lp-blue); }
+    .range-slider { width: 100%; accent-color: var(--lp-blue); cursor: pointer; }
+    .toast-container { position: fixed; bottom: 1.2rem; right: 1.2rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.45rem; }
+    .toast { background: #0f172a; color: #ffffff; padding: 0.65rem 0.95rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); }
+    @page { size: A4 portrait; margin: 0; }
+    @media print {
+      html, body { width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; overflow: hidden !important; }
+      .app-header, .stage-toolbar, .control-sidebar, .inline-screen-tools, .toast-container, .no-print { display: none !important; }
+      .workspace, .preview-stage, .sheet-scroll-container { display: block !important; width: 210mm !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
+      .a4-sheet { width: 210mm !important; height: 297mm !important; min-height: 297mm !important; margin: 0 !important; padding: 6mm 10mm !important; box-shadow: none !important; border: none !important; page-break-after: avoid !important; break-after: avoid !important; }
+      .canvas-editable::placeholder, .top-zip-box::placeholder, .from-zip-box::placeholder { color: transparent !important; }
+      .canvas-editable, .sama-select { background-color: transparent !important; box-shadow: none !important; border-color: transparent !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header no-print">
+    <div class="header-inner">
+      <div class="brand-group">
+        <span class="brand-badge">LETTER PACK LIGHT 430</span>
+        <div>
+          <h1 class="brand-title">レターパックライト 宛名印刷・PDF作成ソフト（実物表面デザイン完全再現）</h1>
+          <span class="brand-subtitle">サーバー不要・単一HTMLオフライン動作・郵便番号⇔住所双方向検索・A4ベクターPDF出力</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="db-status-badge">
+          <span id="db-status-dot" class="status-dot"></span>
+          <span id="db-status-text">オフライン郵便番号辞書</span>
+        </div>
+        <button type="button" id="btn-swap-to-from" class="btn btn-ghost-light">⇄ 届先/依頼主 入替</button>
+        <button type="button" id="btn-clear-to" class="btn btn-ghost-light">✕ 届先クリア</button>
+        <button type="button" id="btn-save-json" class="btn btn-ghost-light">📥 JSON保存</button>
+        <button type="button" id="btn-load-json" class="btn btn-ghost-light">📂 JSON読込</button>
+        <input type="file" id="json-file-input" accept=".json,application/json" style="display:none;" />
+        <button type="button" id="btn-header-print" class="btn btn-primary">🖨️ PDF出力 / 印刷する</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="preview-stage">
+      <div class="stage-toolbar no-print">
+        <div class="stage-hint">
+          <span class="stage-hint-badge">実物デザイン直接入力</span>
+          <span>郵便番号マス・おところ・おなまえ・品名を直接入力できます（✂ 切り取り線付き）</span>
+        </div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <label class="cutline-toggle-chip" title="印刷後にハサミやカッターで切り取るためのガイド線（キリトリ線・四隅トンボ）を表示します">
+            <input type="checkbox" id="toggle-cut-lines" checked />
+            <span>✂ 切り取り線を表示</span>
+          </label>
+          <div class="mode-switch-group">
+            <button type="button" class="mode-btn active" data-mode="full-design">🟦 表面デザイン全体</button>
+            <button type="button" class="mode-btn" data-mode="cutout-box">✂ 宛名枠のみ切り貼り</button>
+            <button type="button" class="mode-btn" data-mode="text-only">📄 文字のみ印刷</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-scroll-container">
+        <div id="a4-printable-sheet" class="a4-sheet show-cut-lines">
+          <div class="lp-envelope">
+            <div class="lp-blue-ribbon">
+              <span>レターパックライト</span><span>レターパックライト</span><span>レターパックライト</span>
+              <span>レターパックライト</span><span>レターパックライト</span><span>レターパックライト</span>
+            </div>
+
+            <div class="lp-envelope-body">
+              <div class="lp-two-col-grid">
+                <div class="lp-left-col">
+                  <div class="lp-stamp-430">
+                    <div class="stamp-line-1">レターパック</div>
+                    <div class="stamp-line-2">ライト</div>
+                    <div id="stamp-price-display" class="stamp-line-price">430</div>
+                    <div class="stamp-bottom-bar"><span>NIPPON</span><span>日本郵便</span></div>
+                    <svg class="stamp-cancel-lines" viewBox="0 0 36 36">
+                      <line x1="6" y1="34" x2="34" y2="6" stroke="#111827" stroke-width="2.2" />
+                      <line x1="14" y1="36" x2="36" y2="14" stroke="#111827" stroke-width="2.2" />
+                    </svg>
+                  </div>
+                  <div class="fold-dotted-notice">
+                    この線より上は封筒ののりしろですので<br />何も書いたり貼ったりしないでください。
+                  </div>
+                </div>
+
+                <div class="lp-center-col">
+                  <div class="lp-unified-cutout-unit">
+                    <div class="cut-guide-frame cut-guide-unified">
+                      <span class="cut-scissor-badge cut-scissor-top">✂ キリトリ線（郵便番号＋宛名枠・この1枠を切り取るだけでそのまま貼付できます）</span>
+                      <span class="cut-scissor-badge cut-scissor-left">✂ キリトリ線</span>
+                      <span class="cut-scissor-badge cut-scissor-right">✂ キリトリ線</span>
+                      <span class="cut-scissor-badge cut-scissor-bottom">✂ キリトリ線</span>
+                      <span class="crop-corner crop-tl"></span>
+                      <span class="crop-corner crop-tr"></span>
+                      <span class="crop-corner crop-bl"></span>
+                      <span class="crop-corner crop-br"></span>
+                    </div>
+
+                    <div class="lp-top-zip-row">
+                      <div class="inline-screen-tools no-print">
+                        <button type="button" id="btn-to-zip2addr" class="inline-tool-btn">🔍 郵便番号⇒住所</button>
+                        <button type="button" id="btn-to-addr2zip" class="inline-tool-btn">🔄 住所⇒郵便番号</button>
+                      </div>
+                      <div class="top-zip-boxes">
+                        <input type="text" id="to-zip-0" class="top-zip-box first-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="1" />
+                        <input type="text" id="to-zip-1" class="top-zip-box first-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                        <input type="text" id="to-zip-2" class="top-zip-box first-3" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                        <span class="top-zip-hyphen"></span>
+                        <input type="text" id="to-zip-3" class="top-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                        <input type="text" id="to-zip-4" class="top-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                        <input type="text" id="to-zip-5" class="top-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                        <input type="text" id="to-zip-6" class="top-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="5" />
+                      </div>
+                    </div>
+
+                    <div class="lp-address-table-outer">
+                      <div class="lp-row-to">
+                        <div class="lp-sidebar-to">
+                          <span class="sidebar-jp-label">お届け先</span>
+                          <span class="sidebar-en-label">To</span>
+                          <svg class="to-up-arrow-svg" viewBox="0 0 56 88">
+                            <path d="M28 6 L6 34 L21 34 L21 88 L35 88 L35 34 L50 34 Z" fill="#ffffff" />
+                          </svg>
+                        </div>
+                        <div class="lp-fields-to">
+                          <div>
+                            <div class="field-head-bar">
+                              <div class="bilingual-label"><span class="lbl-jp">おところ：</span><span class="lbl-en">Address</span></div>
+                            </div>
+                            <div class="address-lines-wrap">
+                              <textarea id="canvas-to-address" class="canvas-editable to-address-textarea" rows="2" placeholder="都道府県・市区町村・番地・建物名を入力"></textarea>
+                            </div>
+                          </div>
+                          <div class="name-block-wrap">
+                            <div class="bilingual-label" style="align-self:flex-start;"><span class="lbl-jp">おなまえ：</span><span class="lbl-en">Name</span></div>
+                            <div class="name-inputs-stack">
+                              <input type="text" id="canvas-to-subname" class="canvas-editable subname-input" placeholder="会社名・部署名・肩書など（任意）" />
+                              <input type="text" id="canvas-to-name" class="canvas-editable mainname-input" placeholder="お届け先 氏名を入力" />
+                            </div>
+                            <select id="canvas-to-honorific" class="sama-select">
+                              <option value="様">様</option><option value="御中">御中</option><option value="先生">先生</option><option value="殿">殿</option><option value="行">行</option><option value="">　</option>
+                            </select>
+                          </div>
+                          <div class="tel-line-row">
+                            <div class="bilingual-label"><span class="lbl-jp">電話番号：</span><span class="lbl-en">Telephone Number</span></div>
+                            <div class="tel-brackets-wrap">
+                              <span>（</span><input type="tel" id="canvas-to-tel" class="canvas-editable tel-input-field" placeholder="03-1234-5678" /><span>）</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="lp-row-from">
+                        <div class="lp-sidebar-from">
+                          <div class="from-arrow-tail">
+                            <span class="tail-sq"></span><span class="tail-sq"></span><span class="tail-sq"></span><span class="tail-sq"></span>
+                          </div>
+                          <span class="sidebar-jp-label">ご依頼主</span>
+                          <span class="sidebar-en-label" style="font-size:13pt;">From</span>
+                        </div>
+                        <div class="lp-fields-from">
+                          <div>
+                            <div class="from-top-bar">
+                              <div class="from-addr-zip-group">
+                                <div class="bilingual-label"><span class="lbl-jp">おところ：</span><span class="lbl-en">Address</span></div>
+                                <div class="from-zip-boxes">
+                                  <input type="text" id="from-zip-0" class="from-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="1" />
+                                  <input type="text" id="from-zip-1" class="from-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="5" />
+                                  <input type="text" id="from-zip-2" class="from-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                                  <span class="from-zip-hyphen"></span>
+                                  <input type="text" id="from-zip-3" class="from-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                                  <input type="text" id="from-zip-4" class="from-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                                  <input type="text" id="from-zip-5" class="from-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="0" />
+                                  <input type="text" id="from-zip-6" class="from-zip-box" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="1" />
+                                </div>
+                              </div>
+                              <div class="inline-screen-tools no-print">
+                                <button type="button" id="btn-from-zip2addr" class="inline-tool-btn">🔍 〒⇒住所</button>
+                                <button type="button" id="btn-from-addr2zip" class="inline-tool-btn">🔄 住所⇒〒</button>
+                              </div>
+                            </div>
+                            <textarea id="canvas-from-address" class="canvas-editable from-address-textarea" rows="2" placeholder="ご依頼主（差出人）の住所を入力"></textarea>
+                          </div>
+                          <div class="from-name-block">
+                            <div class="bilingual-label" style="align-self:flex-start;"><span class="lbl-jp">おなまえ：</span><span class="lbl-en">Name</span></div>
+                            <div>
+                              <input type="text" id="canvas-from-subname" style="display:none;" />
+                              <input type="text" id="canvas-from-name" class="canvas-editable from-name-input" placeholder="ご依頼主（差出人）の氏名・会社名" />
+                            </div>
+                            <select id="canvas-from-honorific" class="sama-select" style="font-size:11pt;">
+                              <option value="">様</option><option value="様">様(印字)</option><option value="">(なし)</option>
+                            </select>
+                          </div>
+                          <div class="tel-line-row">
+                            <div class="bilingual-label"><span class="lbl-jp">電話番号：</span><span class="lbl-en">Telephone Number</span></div>
+                            <div class="tel-brackets-wrap">
+                              <span>（</span><input type="tel" id="canvas-from-tel" class="canvas-editable tel-input-field" placeholder="090-1122-3344" /><span>）</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="lp-row-contents">
+                        <div class="contents-top-line">
+                          <div class="contents-bilingual"><span class="cb-jp">品名：</span><span class="cb-en">Description<br />of contents</span></div>
+                          <div class="contents-note-text">
+                            <strong>品名の記載が無い場合または航空機による輸送ができないものについては、配達が遅れる場合があります。</strong><br />
+                            Without a description of contents or if air transport is not possible, delivery may be delayed.
+                          </div>
+                        </div>
+                        <div class="contents-main-input-row">
+                          <input type="text" id="canvas-contents" class="canvas-editable contents-input-field" placeholder="具体的な品名を入力（例：書類、書籍、衣類）" />
+                        </div>
+                        <div class="contents-bottom-warn-row">
+                          <div class="fraud-red-warning">
+                            現金を送ることはできません。<br />
+                            「レターパックで現金送れ」はすべて詐欺です。<br />
+                            最寄りの警察（電話番号は＃9110）にご相談ください。<br />
+                            <span style="font-size:4.5pt; font-weight:600;">Cannot be used to send cash. Please be careful about fraud.</span>
+                          </div>
+                          <div class="hazard-checkboxes">
+                            <label class="hazard-chk-label"><input type="checkbox" id="chk-no-lithium" checked />リチウム電池なし</label>
+                            <label class="hazard-chk-label"><input type="checkbox" id="chk-no-gas" checked />高圧ガスなし</label>
+                            <label class="hazard-chk-label"><input type="checkbox" id="chk-no-flammable" checked />引火性液体なし</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="lp-howto-row">
+                    <div class="howto-vertical-pill">ご利用方法</div>
+                    <div class="howto-step-card">
+                      <div class="step-head"><span class="step-num">1</span><span class="step-title">あて名書き</span></div>
+                      <div class="step-icon-area">
+                        <svg width="28" height="22" viewBox="0 0 28 22"><rect x="3" y="4" width="16" height="14" fill="none" stroke="#005bab" stroke-width="1.3"/><line x1="14" y1="13" x2="24" y2="3" stroke="#111827" stroke-width="2"/><polygon points="12,15 15,14 13,12" fill="#111827"/></svg>
+                      </div>
+                      <div class="step-foot">シールでもOK</div>
+                    </div>
+                    <div class="howto-step-card">
+                      <div class="step-head"><span class="step-num">2</span><span class="step-title">封入</span></div>
+                      <div class="step-icon-area">
+                        <svg width="28" height="22" viewBox="0 0 28 22"><rect x="4" y="6" width="20" height="13" fill="none" stroke="#005bab" stroke-width="1.3"/><polyline points="4,6 14,12 24,6" fill="none" stroke="#005bab" stroke-width="1.2"/></svg>
+                      </div>
+                      <div class="step-foot">切手不要</div>
+                    </div>
+                    <div class="howto-step-card">
+                      <div class="step-head"><span class="step-num">3</span><span class="step-title">保管用シール<br/>をはがす</span></div>
+                      <div class="step-icon-area">
+                        <svg width="28" height="22" viewBox="0 0 28 22"><rect x="3" y="6" width="22" height="10" rx="2" fill="#e0f2fe" stroke="#005bab" stroke-width="1.2"/><path d="M5 11 Q12 4 20 9" fill="none" stroke="#005bab" stroke-width="1.4"/></svg>
+                      </div>
+                      <div class="step-foot">ご依頼主様が保管</div>
+                    </div>
+                    <div class="howto-step-card">
+                      <div class="step-head"><span class="step-num">4</span><span class="step-title">投かん</span></div>
+                      <div class="step-icon-area">
+                        <svg width="24" height="22" viewBox="0 0 24 22"><rect x="6" y="4" width="12" height="14" fill="#d7262b"/><rect x="8" y="7" width="8" height="2" fill="#ffffff"/><rect x="10" y="18" width="4" height="4" fill="#475569"/></svg>
+                      </div>
+                      <div class="step-foot">郵便窓口のご利用も可</div>
+                    </div>
+                    <div class="howto-step-card filled-blue">
+                      <div class="step-head"><span class="step-num">5</span><span class="step-title">配達</span></div>
+                      <div class="step-icon-area">
+                        <svg width="28" height="22" viewBox="0 0 28 22"><rect x="5" y="6" width="18" height="12" fill="#ffffff" stroke="#005bab" stroke-width="1"/><rect x="9" y="9" width="10" height="2" fill="#005bab"/></svg>
+                      </div>
+                      <div class="step-foot">郵便受け</div>
+                    </div>
+                  </div>
+
+                  <div class="lp-peel-section">
+                    <div class="peel-left-col">
+                      <div class="peel-top-caption">はがして差出し ↓</div>
+                      <div class="peel-sticker-box">
+                        <div class="peel-tab-text">はがす</div>
+                        <div class="peel-sticker-inner">
+                          <div style="font-size:4.5pt; color:#0284c7; font-weight:700; line-height:1.2;">
+                            0120-23-28-86 https://www.post.japanpost.jp/<br />
+                            ★日本郵便Webページはこちら 携帯電話からは0570-046-666
+                          </div>
+                          <div class="peel-qr-and-num">
+                            <svg class="qr-placeholder-svg" viewBox="0 0 24 24">
+                              <rect x="1" y="1" width="8" height="8" fill="none" stroke="#111827" stroke-width="2"/><rect x="3.5" y="3.5" width="3" height="3" fill="#111827"/>
+                              <rect x="15" y="1" width="8" height="8" fill="none" stroke="#111827" stroke-width="2"/><rect x="17.5" y="3.5" width="3" height="3" fill="#111827"/>
+                              <rect x="1" y="15" width="8" height="8" fill="none" stroke="#111827" stroke-width="2"/><rect x="3.5" y="17.5" width="3" height="3" fill="#111827"/>
+                              <rect x="12" y="12" width="3" height="3" fill="#111827"/><rect x="17" y="16" width="5" height="5" fill="#111827"/>
+                            </svg>
+                            <div class="peel-tracking-info">
+                              <span class="peel-lp-tag">LPライト　お問い合わせ番号</span>
+                              <input type="text" id="canvas-tracking-1" class="tracking-input-clean" value="9999-9999-9999" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="peel-right-retain-box">
+                      <div>
+                        <div class="retain-title-jp">ご依頼主様保管用シール</div>
+                        <div class="retain-title-en">Sender To Retain</div>
+                      </div>
+                      <div class="retain-contact-details">
+                        シール記載の番号により、追跡サービスがご利用いただけます。<br />
+                        配達状況お問い合わせ先<br />
+                        インターネット：https://www.post.japanpost.jp/<br />
+                        固定電話から：0120-23-28-86<br />
+                        携帯電話から：0570-046-666
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="lp-bottom-gray-card">
+                    <div class="gray-card-top-row">
+                      <div class="post-barcode-pill">
+                        <div class="pb-label">郵便局用<br />バーコード<br /><span style="font-size:4.2pt; font-weight:600;">For JAPAN POST Use Only</span></div>
+                        <div class="pb-barcode-wrap">
+                          <svg class="barcode-svg"></svg>
+                          <input type="text" id="canvas-tracking-2" class="tracking-input-clean pb-num-display" style="text-align:center; width:36mm;" value="9999-9999-9999" />
+                        </div>
+                      </div>
+                      <div>
+                        <div class="attention-oval"><span class="att-jp">ご注意</span><span class="att-en">Attention</span></div>
+                      </div>
+                    </div>
+                    <div class="specs-3cm-4kg-row">
+                      <div class="spec-limit-item">
+                        <span class="big-red-3">3</span>
+                        <div class="spec-limit-stack">
+                          <span class="spec-tag-pill">厚 さ</span>
+                          <div class="spec-unit-line"><span class="unit-cm-red">cmまで</span><span class="unit-en-sub">Max Thickness<br />of 3 cm</span></div>
+                        </div>
+                      </div>
+                      <div class="spec-limit-item">
+                        <span class="big-black-4">4</span>
+                        <div class="spec-limit-stack">
+                          <span class="spec-tag-pill">重 さ</span>
+                          <div class="spec-unit-line"><span class="unit-kg-black">kgまで</span><span class="unit-en-sub">Max Weight<br />of 4 kg</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="gray-card-foot-note">
+                      内容品をレターパックライト封筒に封入した状態で、<br />
+                      厚さ3cmを超えるものまたは重さ4kgを超えるものは、お引受けできません。
+                    </div>
+                  </div>
+
+                  <div class="lp-bottom-title-bar">
+                    <span class="tokutei-label">特定封筒</span>
+                    <div class="bottom-brand-logo">
+                      <span class="bbl-en">LETTER PACK LIGHT</span>
+                      <span class="bbl-jp">レターパックライト</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lp-right-edge-notes">
+                  <span>太線枠内をボールペン等で強く記入してください。</span>
+                  <span>※ポストに入らない場合は郵便窓口にお出しください。</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="lp-blue-ribbon">
+              <span>レターパックライト</span><span>レターパックライト</span><span>レターパックライト</span>
+              <span>レターパックライト</span><span>レターパックライト</span><span>レターパックライト</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="control-sidebar no-print">
+      <nav class="sidebar-tabs">
+        <button type="button" class="tab-btn active" data-tab="tab-edit"><span>✏️</span><span>宛名・品名</span></button>
+        <button type="button" class="tab-btn" data-tab="tab-postal"><span>🔍</span><span>〒⇔住所検索</span></button>
+        <button type="button" class="tab-btn" data-tab="tab-book"><span>📒</span><span>アドレス帳</span></button>
+        <button type="button" class="tab-btn" data-tab="tab-calib"><span>📐</span><span>文字・位置調整</span></button>
+      </nav>
+
+      <div id="tab-edit" class="tab-panel active">
+        <div class="panel-section">
+          <div class="section-header">
+            <h2 class="section-title"><span>お届け先（To）</span><span class="section-badge">ラベルと連動</span></h2>
+            <button type="button" id="btn-save-to-contact" class="btn btn-outline btn-sm">＋ アドレス帳に保存</button>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="side-to-zip"><span>郵便番号（右上の赤枠7桁マスと連動）</span></label>
+            <div class="input-with-btn">
+              <input type="text" id="side-to-zip" class="form-input" placeholder="例: 100-0005" inputmode="numeric" />
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('btn-to-zip2addr').click()">〒⇒住所</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('btn-to-addr2zip').click()">住所⇒〒</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="side-to-address"><span>おところ（Address）</span></label>
+            <textarea id="side-to-address" class="form-textarea" rows="2" placeholder="例: 東京都千代田区丸の内1丁目9-1"></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="side-to-subname">会社名・部署名・肩書（任意）</label>
+            <input type="text" id="side-to-subname" class="form-input" placeholder="例: 株式会社サンプル商事 営業部" />
+          </div>
+          <div class="form-row-2col">
+            <div>
+              <label class="form-label" for="side-to-name">おなまえ（Name）</label>
+              <input type="text" id="side-to-name" class="form-input" placeholder="例: 山田 太郎" />
+            </div>
+            <div>
+              <label class="form-label" for="side-to-honorific">敬称 / 電話番号</label>
+              <div style="display:flex; gap:0.3rem;">
+                <select id="side-to-honorific" class="form-select" style="width:76px;">
+                  <option value="様">様</option><option value="御中">御中</option><option value="先生">先生</option><option value="殿">殿</option><option value="行">行</option><option value="">なし</option>
+                </select>
+                <input type="tel" id="side-to-tel" class="form-input" placeholder="03-1234-5678" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="section-header">
+            <h2 class="section-title"><span>ご依頼主（From）</span></h2>
+            <button type="button" id="btn-save-from-contact" class="btn btn-outline btn-sm">＋ アドレス帳に保存</button>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="side-from-zip">郵便番号（おところ横の7桁小枠と連動）</label>
+            <div class="input-with-btn">
+              <input type="text" id="side-from-zip" class="form-input" placeholder="例: 150-0001" inputmode="numeric" />
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('btn-from-zip2addr').click()">〒⇒住所</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('btn-from-addr2zip').click()">住所⇒〒</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="side-from-address">ご依頼主 おところ（Address）</label>
+            <textarea id="side-from-address" class="form-textarea" rows="2" placeholder="例: 東京都渋谷区神宮前4丁目12-10"></textarea>
+          </div>
+          <div class="form-row-2col">
+            <div>
+              <label class="form-label" for="side-from-name">ご依頼主 おなまえ（Name）</label>
+              <input type="text" id="side-from-name" class="form-input" placeholder="例: 鈴木 一郎" />
+            </div>
+            <div>
+              <label class="form-label" for="side-from-tel">電話番号</label>
+              <input type="tel" id="side-from-tel" class="form-input" placeholder="090-1122-3344" />
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="section-header">
+            <h2 class="section-title"><span>品名（Description of contents）</span><span class="section-badge" style="background:var(--lp-red-pale); color:var(--lp-red);">必須</span></h2>
+          </div>
+          <div class="form-row">
+            <input type="text" id="side-contents" class="form-input" placeholder="例: 書類（契約書・請求書）" />
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-bottom:0.85rem;">
+            <button type="button" class="btn btn-outline btn-sm" data-preset-contents="書類">📄 書類</button>
+            <button type="button" class="btn btn-outline btn-sm" data-preset-contents="書類（契約書・請求書）">📑 契約書・請求書</button>
+            <button type="button" class="btn btn-outline btn-sm" data-preset-contents="書籍・雑誌">📚 書籍・雑誌</button>
+            <button type="button" class="btn btn-outline btn-sm" data-preset-contents="衣類（Tシャツ・シャツ）">👕 衣類</button>
+            <button type="button" class="btn btn-outline btn-sm" data-preset-contents="カタログ・パンフレット">📘 カタログ</button>
+            <button type="button" class="btn btn-outline btn-sm" data-preset-contents="日用雑貨（電池・危険物なし）">📦 日用雑貨</button>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.65rem;">
+            <button type="button" id="btn-side-save-json" class="btn btn-outline" style="justify-content:center; padding:0.55rem;">📥 JSONで保存</button>
+            <button type="button" id="btn-side-load-json" class="btn btn-outline" style="justify-content:center; padding:0.55rem;">📂 JSONを開く</button>
+          </div>
+          <button type="button" id="btn-sidebar-print" class="btn btn-accent" style="width:100%; padding:0.75rem; font-size:0.95rem;">
+            🖨️ デザインを保ってA4 PDF出力 / 印刷する
+          </button>
+        </div>
+      </div>
+
+      <div id="tab-postal" class="tab-panel">
+        <div class="panel-section">
+          <div class="section-header">
+            <h2 class="section-title"><span>郵便番号 ⇔ 住所 双方向ネット検索</span><span class="section-badge">全国ネットAPI対応</span></h2>
+          </div>
+          <div class="form-row">
+            <div class="input-with-btn">
+              <input type="text" id="universal-postal-query" class="form-input" placeholder="7桁郵便番号 または 住所（市区町村・町名・番地）を入力..." />
+              <button type="button" id="btn-universal-search" class="btn btn-accent btn-sm">ネット検索</button>
+            </div>
+          </div>
+          <div id="postal-search-results" class="search-results-box">
+            <div style="padding:0.8rem; font-size:0.78rem; color:#64748b; text-align:center;">
+              全国の郵便番号（例: 105-0001）または住所キーワード（例: 港区虎ノ門、札幌市北区）からネット経由でリアルタイム検索します。
+            </div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="section-header"><h2 class="section-title">日本郵便CSVファイル読込（ローカル辞書追加）</h2></div>
+          <input type="file" id="csv-file-input" accept=".csv" class="form-input" style="font-size:0.75rem;" />
+        </div>
+      </div>
+
+      <div id="tab-book" class="tab-panel">
+        <div class="panel-section">
+          <div class="section-header">
+            <h2 class="section-title"><span>保存済みアドレス帳</span><span class="section-badge">JSON連携対応</span></h2>
+            <div style="display:flex; gap:0.35rem;">
+              <button type="button" id="btn-book-save-json" class="btn btn-outline btn-sm">📥 JSON保存</button>
+              <button type="button" id="btn-book-load-json" class="btn btn-outline btn-sm">📂 JSON読込</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <input type="text" id="address-book-filter" class="form-input" placeholder="氏名・会社名・住所・郵便番号で絞り込み..." />
+          </div>
+          <div id="address-book-list" class="address-book-list"></div>
+        </div>
+      </div>
+
+      <div id="tab-calib" class="tab-panel">
+        <div class="panel-section">
+          <div class="section-header">
+            <h2 class="section-title"><span>文字サイズ・料額印面（430/370）設定</span></h2>
+            <button type="button" id="btn-reset-calibration" class="btn btn-outline btn-sm">初期値に戻す</button>
+          </div>
+          <div class="form-row">
+            <label style="display:flex; align-items:center; gap:0.45rem; font-size:0.8rem; font-weight:700; cursor:pointer;">
+              <input type="checkbox" id="auto-fit-font-toggle" checked />
+              <span>長い住所・氏名の文字サイズを自動調整する</span>
+            </label>
+          </div>
+          <div class="form-row-2col">
+            <div>
+              <label class="form-label" for="select-font-family">印字フォント</label>
+              <select id="select-font-family" class="form-select">
+                <option value="gothic">ゴシック体（標準）</option>
+                <option value="mincho">明朝体（ビジネス）</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="select-stamp-price">料額印面（430 / 370）</label>
+              <select id="select-stamp-price" class="form-select" onchange="document.getElementById('stamp-price-display').textContent = this.value;">
+                <option value="430">430（現行料金）</option>
+                <option value="370">370（旧料金封筒）</option>
+              </select>
+            </div>
+          </div>
+          <div class="slider-row">
+            <div class="slider-header"><span>お届け先 住所サイズ</span><span id="val-to-addr-size" class="slider-val">14.5pt</span></div>
+            <input type="range" id="slider-to-addr-size" class="range-slider" min="9" max="20" step="0.5" value="14.5" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-header"><span>お届け先 氏名サイズ</span><span id="val-to-name-size" class="slider-val">18.5pt</span></div>
+            <input type="range" id="slider-to-name-size" class="range-slider" min="11" max="26" step="0.5" value="18.5" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-header"><span>ご依頼主 住所サイズ</span><span id="val-from-addr-size" class="slider-val">10pt</span></div>
+            <input type="range" id="slider-from-addr-size" class="range-slider" min="7" max="14" step="0.5" value="10" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-header"><span>ご依頼主 氏名サイズ</span><span id="val-from-name-size" class="slider-val">12pt</span></div>
+            <input type="range" id="slider-from-name-size" class="range-slider" min="8.5" max="17" step="0.5" value="12" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-header"><span>品名サイズ</span><span id="val-contents-size" class="slider-val">11.5pt</span></div>
+            <input type="range" id="slider-contents-size" class="range-slider" min="8" max="16" step="0.5" value="11.5" />
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="section-header"><h2 class="section-title">プリンター位置補正（オフセット調整）</h2></div>
+          <div class="slider-row">
+            <div class="slider-header"><span>左右位置オフセット (X軸)</span><span id="val-offset-x" class="slider-val">0mm</span></div>
+            <input type="range" id="slider-offset-x" class="range-slider" min="-15" max="15" step="0.5" value="0" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-header"><span>上下位置オフセット (Y軸)</span><span id="val-offset-y" class="slider-val">0mm</span></div>
+            <input type="range" id="slider-offset-y" class="range-slider" min="-15" max="15" step="0.5" value="0" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-header"><span>全体スケール</span><span id="val-scale" class="slider-val">100%</span></div>
+            <input type="range" id="slider-scale" class="range-slider" min="90" max="108" step="1" value="100" />
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="toast-container" class="toast-container no-print"></div>
+
+  <script>
+    (function () {
+      "use strict";
+      const FALLBACK_POSTAL = [
+        ["1000001", "東京都", "千代田区", "千代田"], ["1000004", "東京都", "千代田区", "大手町"], ["1000005", "東京都", "千代田区", "丸の内"],
+        ["1000006", "東京都", "千代田区", "有楽町"], ["1000011", "東京都", "千代田区", "内幸町"], ["1000013", "東京都", "千代田区", "霞が関"],
+        ["1000014", "東京都", "千代田区", "永田町"], ["1010021", "東京都", "千代田区", "外神田"], ["1010047", "東京都", "千代田区", "内神田"],
+        ["1020072", "東京都", "千代田区", "飯田橋"], ["1020083", "東京都", "千代田区", "麹町"], ["1030022", "東京都", "中央区", "日本橋室町"],
+        ["1030027", "東京都", "中央区", "日本橋"], ["1040061", "東京都", "中央区", "銀座"], ["1040045", "東京都", "中央区", "築地"],
+        ["1050001", "東京都", "港区", "虎ノ門"], ["1050011", "東京都", "港区", "芝公園"], ["1050022", "東京都", "港区", "海岸"],
+        ["1060032", "東京都", "港区", "六本木"], ["1070052", "東京都", "港区", "赤坂"], ["1070062", "東京都", "港区", "南青山"],
+        ["1080075", "東京都", "港区", "港南"], ["1410032", "東京都", "品川区", "大崎"], ["1500001", "東京都", "渋谷区", "神宮前"],
+        ["1500002", "東京都", "渋谷区", "渋谷"], ["1500013", "東京都", "渋谷区", "恵比寿"], ["1500043", "東京都", "渋谷区", "道玄坂"],
+        ["1530061", "東京都", "目黒区", "中目黒"], ["1540024", "東京都", "世田谷区", "三軒茶屋"], ["1600022", "東京都", "新宿区", "新宿"],
+        ["1600023", "東京都", "新宿区", "西新宿"], ["1638001", "東京都", "新宿区", "西新宿"], ["1700013", "東京都", "豊島区", "東池袋"],
+        ["1710022", "東京都", "豊島区", "南池袋"], ["1800004", "東京都", "武蔵野市", "吉祥寺本町"], ["1900012", "東京都", "立川市", "曙町"],
+        ["2200011", "神奈川県", "横浜市西区", "高島"], ["2200012", "神奈川県", "横浜市西区", "みなとみらい"], ["2310005", "神奈川県", "横浜市中区", "本町"],
+        ["2100007", "神奈川県", "川崎市川崎区", "駅前本町"], ["2600013", "千葉県", "千葉市中央区", "中央"], ["2730005", "千葉県", "船橋市", "本町"],
+        ["3309301", "埼玉県", "さいたま市浦和区", "高砂"], ["3300854", "埼玉県", "さいたま市大宮区", "桜木町"], ["3050031", "茨城県", "つくば市", "吾妻"],
+        ["3200811", "栃木県", "宇都宮市", "大通り"], ["3710026", "群馬県", "前橋市", "大手町"], ["0600000", "北海道", "札幌市中央区", ""],
+        ["0600001", "北海道", "札幌市中央区", "北一条西"], ["0600042", "北海道", "札幌市中央区", "大通西"], ["9800021", "宮城県", "仙台市青葉区", "中央"],
+        ["9500087", "新潟県", "新潟市中央区", "東大通"], ["9200858", "石川県", "金沢市", "木ノ新保町"], ["4200852", "静岡県", "静岡市葵区", "紺屋町"],
+        ["4500002", "愛知県", "名古屋市中村区", "名駅"], ["4600003", "愛知県", "名古屋市中区", "錦"], ["4600008", "愛知県", "名古屋市中区", "栄"],
+        ["6008216", "京都府", "京都市下京区", "東塩小路町"], ["6048006", "京都府", "京都市中京区", "河原町通"], ["5300001", "大阪府", "大阪市北区", "梅田"],
+        ["5300005", "大阪府", "大阪市北区", "中之島"], ["5408570", "大阪府", "大阪市中央区", "大手前"], ["5410041", "大阪府", "大阪市中央区", "北浜"],
+        ["5410053", "大阪府", "大阪市中央区", "本町"], ["5420081", "大阪府", "大阪市中央区", "南船場"], ["5420076", "大阪府", "大阪市中央区", "難波"],
+        ["6500001", "兵庫県", "神戸市中央区", "加納町"], ["6500021", "兵庫県", "神戸市中央区", "三宮町"], ["7000901", "岡山県", "岡山市北区", "本町"],
+        ["7300011", "広島県", "広島市中区", "基町"], ["7300031", "広島県", "広島市中区", "紙屋町"], ["7600019", "香川県", "高松市", "サンポート"],
+        ["7900001", "愛媛県", "松山市", "一番町"], ["8100001", "福岡県", "福岡市中央区", "天神"], ["8120011", "福岡県", "福岡市博多区", "博多駅前"],
+        ["8120012", "福岡県", "福岡市博多区", "博多駅中央街"], ["8600808", "熊本県", "熊本市中央区", "手取本町"], ["8900053", "鹿児島県", "鹿児島市", "中央町"],
+        ["9000015", "沖縄県", "那覇市", "久茂地"]
+      ];
+
+      const zipMap = new Map();
+      let flatRecords = [];
+
+      function indexPostalTree(treeObj) {
+        zipMap.clear();
+        flatRecords = [];
+        for (const pref of Object.keys(treeObj)) {
+          const cities = treeObj[pref];
+          for (const city of Object.keys(cities)) {
+            const list = cities[city];
+            for (let i = 0; i < list.length; i++) {
+              const z = list[i][0];
+              const t = list[i][1] || "";
+              const entry = { zip: z, pref, city, town: t, full: pref + city + t };
+              flatRecords.push(entry);
+              let arr = zipMap.get(z);
+              if (!arr) { arr = []; zipMap.set(z, arr); }
+              arr.push(entry);
+            }
+          }
+        }
+        const badgeText = document.getElementById("db-status-text");
+        if (badgeText) badgeText.textContent = `全国ネットAPI接続 (キャッシュ ${flatRecords.length.toLocaleString()}件)`;
+      }
+
+      function addRecordToCache(zip, pref, city, town) {
+        const cleanZip = normalizeDigits(zip).replace(/[^0-9]/g, "");
+        if (cleanZip.length !== 7 || !pref) return null;
+        const cleanTown = (town || "").replace(/（.*$/, "").replace(/以下に掲載がない場合/, "");
+        const full = pref + (city || "") + cleanTown;
+        const entry = { zip: cleanZip, pref, city: city || "", town: cleanTown, full };
+        let arr = zipMap.get(cleanZip);
+        if (!arr) {
+          arr = [];
+          zipMap.set(cleanZip, arr);
+        }
+        if (!arr.some((x) => x.full === full)) {
+          arr.push(entry);
+          flatRecords.push(entry);
+          const badgeText = document.getElementById("db-status-text");
+          if (badgeText) badgeText.textContent = `全国ネットAPI接続 (キャッシュ ${flatRecords.length.toLocaleString()}件)`;
+        }
+        return entry;
+      }
+
+      function initFallbackPostal() {
+        const tree = {};
+        for (const [z, p, c, t] of FALLBACK_POSTAL) {
+          if (!tree[p]) tree[p] = {};
+          if (!tree[p][c]) tree[p][c] = [];
+          tree[p][c].push([z, t]);
+        }
+        indexPostalTree(tree);
+      }
+
+      function normalizeDigits(str) {
+        if (!str) return "";
+        return str.replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0));
+      }
+
+      function formatZipHyphen(zip7) {
+        const d = normalizeDigits(zip7).replace(/[^0-9]/g, "");
+        return d.length > 3 ? d.slice(0, 3) + "-" + d.slice(3, 7) : d;
+      }
+
+      function showToast(msg) {
+        const container = document.getElementById("toast-container");
+        if (!container) return;
+        const el = document.createElement("div");
+        el.className = "toast";
+        el.textContent = msg;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 3200);
+      }
+
+      function searchByZip(rawZip, limit = 40) {
+        const clean = normalizeDigits(rawZip).replace(/[^0-9]/g, "");
+        if (!clean) return [];
+        if (clean.length === 7 && zipMap.has(clean)) return zipMap.get(clean);
+        if (clean.length >= 3) {
+          const results = [];
+          for (let i = 0; i < flatRecords.length; i++) {
+            if (flatRecords[i].zip.startsWith(clean)) {
+              results.push(flatRecords[i]);
+              if (results.length >= limit) break;
+            }
+          }
+          return results;
+        }
+        return [];
+      }
+
+      function searchByAddress(query, limit = 50) {
+        const cleaned = query.replace(/[0-9０-９\-ー－丁目番地号\s　]+.*$/, "").trim();
+        const tokens = (cleaned || query.trim()).split(/[\s　]+/).filter(Boolean);
+        if (tokens.length === 0) return [];
+        const matches = [];
+        for (let i = 0; i < flatRecords.length; i++) {
+          const rec = flatRecords[i];
+          if (tokens.every((tk) => rec.full.includes(tk))) {
+            matches.push(rec);
+            if (matches.length >= limit) break;
+          }
+        }
+        return matches;
+      }
+
+      function findBestZipForFullAddress(fullAddr) {
+        if (!fullAddr || fullAddr.trim().length < 2) return null;
+        const raw = fullAddr.trim().replace(/[\s　]/g, "");
+        let bestMatch = null;
+        let bestLen = 0;
+        for (let i = 0; i < flatRecords.length; i++) {
+          const rec = flatRecords[i];
+          if (rec.town && raw.includes(rec.full) && rec.full.length > bestLen) {
+            bestMatch = rec; bestLen = rec.full.length;
+          } else if (rec.town && raw.includes(rec.city + rec.town) && (rec.city + rec.town).length > bestLen) {
+            bestMatch = rec; bestLen = (rec.city + rec.town).length;
+          } else if (!bestMatch && raw.includes(rec.pref + rec.city)) {
+            bestMatch = rec;
+          }
+        }
+        return bestMatch;
+      }
+
+      async function fetchAddressFromZipOnline(rawZip) {
+        const clean = normalizeDigits(rawZip).replace(/[^0-9]/g, "");
+        if (clean.length < 3) return [];
+
+        // 1. zipcloud API (7桁完全一致)
+        if (clean.length === 7) {
+          try {
+            const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${clean}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data && Array.isArray(data.results) && data.results.length > 0) {
+                const items = [];
+                data.results.forEach((r) => {
+                  const entry = addRecordToCache(r.zipcode || clean, r.address1, r.address2, r.address3);
+                  if (entry) items.push(entry);
+                });
+                if (items.length > 0) return items;
+              }
+            }
+          } catch (_) {}
+        }
+
+        // 2. HeartRails Geo API (3〜7桁の前方一致・完全一致)
+        try {
+          const res2 = await fetch(`https://geoapi.heartrails.com/api/json?method=searchByPostal&postal=${clean}`);
+          if (res2.ok) {
+            const data2 = await res2.json();
+            const locs = data2 && data2.response && data2.response.location;
+            if (Array.isArray(locs) && locs.length > 0) {
+              const items = [];
+              const seen = new Set();
+              locs.forEach((loc) => {
+                const entry = addRecordToCache(loc.postal || clean, loc.prefecture, loc.city, loc.town);
+                if (entry && !seen.has(entry.zip + entry.full)) {
+                  seen.add(entry.zip + entry.full);
+                  items.push(entry);
+                }
+              });
+              if (items.length > 0) return items;
+            }
+          }
+        } catch (_) {}
+
+        return searchByZip(clean);
+      }
+
+      function stripStreetNumbersForLookup(rawAddr) {
+        if (!rawAddr) return "";
+        let s = normalizeDigits(rawAddr).trim();
+        // マンション・ビル名や部屋番号、番地以降を段階的に除去して町名までを抽出
+        s = s.replace(/[\s　]+.*$/, "");
+        s = s.replace(/[0-9]+丁目.*$/, "");
+        s = s.replace(/[一二三四五六七八九十]+丁目.*$/, "");
+        s = s.replace(/[-－ー0-9番地号]+.*$/, "");
+        return s.trim();
+      }
+
+      async function fetchZipFromAddressOnline(rawAddr) {
+        if (!rawAddr || !rawAddr.trim()) return [];
+        const original = rawAddr.trim();
+        const stripped = stripStreetNumbersForLookup(original);
+        const candidates = Array.from(new Set([
+          stripped,
+          original.replace(/[0-9０-９\-ー－番地号\s　]+.*$/, "").trim(),
+          original.split(/[\s　]/)[0].trim()
+        ])).filter((q) => q.length >= 2);
+
+        const found = [];
+        const seen = new Set();
+
+        // 1. HeartRails Geo API (method=suggest, matching=like)
+        for (const kw of candidates) {
+          try {
+            const url = `https://geoapi.heartrails.com/api/json?method=suggest&matching=like&keyword=${encodeURIComponent(kw)}`;
+            const res = await fetch(url);
+            if (res.ok) {
+              const data = await res.json();
+              const locs = data && data.response && data.response.location;
+              if (Array.isArray(locs) && locs.length > 0) {
+                locs.forEach((loc) => {
+                  const entry = addRecordToCache(loc.postal, loc.prefecture, loc.city, loc.town);
+                  if (entry && !seen.has(entry.zip + entry.full)) {
+                    seen.add(entry.zip + entry.full);
+                    found.push(entry);
+                  }
+                });
+                if (found.length > 0) break;
+              }
+            }
+          } catch (_) {}
+        }
+
+        // 2. 国土地理院 ジオコーディングAPI → 緯度経度から HeartRails searchByGeoLocation で郵便番号を特定
+        if (found.length === 0) {
+          try {
+            const gsiRes = await fetch(`https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(original)}`);
+            if (gsiRes.ok) {
+              const gsiData = await gsiRes.json();
+              if (Array.isArray(gsiData) && gsiData.length > 0) {
+                const coords = gsiData[0].geometry && gsiData[0].geometry.coordinates;
+                if (Array.isArray(coords) && coords.length >= 2) {
+                  const lon = coords[0];
+                  const lat = coords[1];
+                  const geoRes = await fetch(`https://geoapi.heartrails.com/api/json?method=searchByGeoLocation&x=${lon}&y=${lat}`);
+                  if (geoRes.ok) {
+                    const geoData = await geoRes.json();
+                    const locs = geoData && geoData.response && geoData.response.location;
+                    if (Array.isArray(locs) && locs.length > 0) {
+                      locs.forEach((loc) => {
+                        const entry = addRecordToCache(loc.postal, loc.prefecture, loc.city, loc.town);
+                        if (entry && !seen.has(entry.zip + entry.full)) {
+                          seen.add(entry.zip + entry.full);
+                          found.push(entry);
+                        }
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (found.length > 0) {
+          // 入力された住所により長く一致する候補を優先ソート
+          const cleanOrig = original.replace(/[\s　]/g, "");
+          found.sort((a, b) => {
+            const aMatch = cleanOrig.includes(a.full) ? a.full.length + 100 : cleanOrig.includes(a.city + a.town) ? (a.city + a.town).length + 50 : 0;
+            const bMatch = cleanOrig.includes(b.full) ? b.full.length + 100 : cleanOrig.includes(b.city + b.town) ? (b.city + b.town).length + 50 : 0;
+            return bMatch - aMatch;
+          });
+          return found;
+        }
+
+        // フォールバック: ローカルキャッシュ検索
+        const bestLocal = findBestZipForFullAddress(original);
+        if (bestLocal) return [bestLocal];
+        return searchByAddress(original, 30);
+      }
+
+      function renderTrackingBarcodes(trackingStr) {
+        const clean = normalizeDigits(trackingStr).replace(/[^0-9]/g, "") || "999999999999";
+        const svgs = document.querySelectorAll(".barcode-svg");
+        const patterns = [
+          [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],
+          [1,3,1,2,2,2],[1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3]
+        ];
+        let x = 6;
+        const bars = [{ x: 6, w: 2 }, { x: 9, w: 1 }];
+        x = 12;
+        for (let i = 0; i < clean.length; i++) {
+          const d = parseInt(clean[i], 10) || 0;
+          const pat = patterns[d % 10];
+          for (let p = 0; p < pat.length; p++) {
+            const w = pat[p] * 1.15;
+            if (p % 2 === 0) bars.push({ x, w });
+            x += w;
+          }
+        }
+        bars.push({ x, w: 2 }); x += 4;
+        bars.push({ x, w: 1.5 }); x += 6;
+        const inner = bars.map((b) => `<rect x="${b.x.toFixed(1)}" y="1" width="${b.w.toFixed(1)}" height="28" fill="#111827"/>`).join("");
+        svgs.forEach((svg) => {
+          svg.setAttribute("viewBox", `0 0 ${Math.max(x, 120)} 30`);
+          svg.innerHTML = inner;
+        });
+      }
+
+      function getZipFromBoxes(prefix) {
+        let z = "";
+        for (let i = 0; i < 7; i++) {
+          const box = document.getElementById(`${prefix}-zip-${i}`);
+          z += box ? (normalizeDigits(box.value).replace(/[^0-9]/g, "") || " ") : " ";
+        }
+        return z.trim();
+      }
+
+      function setZipToBoxes(prefix, zipStr) {
+        const clean = normalizeDigits(zipStr).replace(/[^0-9]/g, "");
+        for (let i = 0; i < 7; i++) {
+          const box = document.getElementById(`${prefix}-zip-${i}`);
+          if (box) box.value = clean[i] || "";
+        }
+        const sideInput = document.getElementById(`side-${prefix}-zip`);
+        if (sideInput) sideInput.value = formatZipHyphen(clean);
+      }
+
+      function setupZipBoxes(prefix, onCompleteZip) {
+        let isComposing = false;
+
+        function syncSideInputAndCheckComplete() {
+          let full = "";
+          for (let k = 0; k < 7; k++) {
+            const b = document.getElementById(`${prefix}-zip-${k}`);
+            if (b) {
+              const d = normalizeDigits(b.value).replace(/[^0-9]/g, "").slice(0, 1);
+              if (b.value !== d) b.value = d;
+              full += d;
+            }
+          }
+          const sideInput = document.getElementById(`side-${prefix}-zip`);
+          if (sideInput) sideInput.value = formatZipHyphen(full);
+          if (full.length === 7 && onCompleteZip) onCompleteZip(full);
+        }
+
+        function distributeDigitsFrom(startIndex, rawStr) {
+          const digits = normalizeDigits(rawStr).replace(/[^0-9]/g, "");
+          if (!digits) {
+            const currentBox = document.getElementById(`${prefix}-zip-${startIndex}`);
+            if (currentBox) currentBox.value = "";
+            syncSideInputAndCheckComplete();
+            return;
+          }
+          const targetStart = (digits.length === 7) ? 0 : startIndex;
+          let lastFilled = targetStart;
+          for (let offset = 0; offset < digits.length; offset++) {
+            const idx = targetStart + offset;
+            if (idx > 6) break;
+            const b = document.getElementById(`${prefix}-zip-${idx}`);
+            if (b) {
+              b.value = digits[offset];
+              lastFilled = idx;
+            }
+          }
+          syncSideInputAndCheckComplete();
+          const nextIdx = Math.min(lastFilled + 1, 6);
+          if (lastFilled < 6) {
+            const nextBox = document.getElementById(`${prefix}-zip-${nextIdx}`);
+            if (nextBox) {
+              nextBox.focus();
+              setTimeout(() => {
+                try { nextBox.setSelectionRange(0, nextBox.value.length); } catch (_) {}
+              }, 0);
+            }
+          }
+        }
+
+        for (let i = 0; i < 7; i++) {
+          const box = document.getElementById(`${prefix}-zip-${i}`);
+          if (!box) continue;
+
+          const selectAll = () => {
+            setTimeout(() => {
+              try { box.setSelectionRange(0, box.value.length); } catch (_) {}
+            }, 0);
+          };
+
+          box.addEventListener("focus", selectAll);
+          box.addEventListener("click", selectAll);
+          box.addEventListener("touchend", selectAll, { passive: true });
+
+          // iPadで既に1文字入っているマス（maxlength="1"）にそのまま上書き入力できるよう、文字挿入の直前に既存値が選択されていなければクリアしておく（フォーカス移動はここでは一切行わない）
+          box.addEventListener("beforeinput", (e) => {
+            if (isComposing) return;
+            if (e.inputType && e.inputType.startsWith("insert") && box.value.length >= 1) {
+              box.value = "";
+            }
+          });
+
+          box.addEventListener("compositionstart", () => {
+            isComposing = true;
+          });
+
+          box.addEventListener("compositionend", (e) => {
+            isComposing = false;
+            const raw = normalizeDigits(e.target.value || e.data || "").replace(/[^0-9]/g, "");
+            distributeDigitsFrom(i, raw);
+          });
+
+          box.addEventListener("paste", (e) => {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData("text") || "";
+            distributeDigitsFrom(i, pasted);
+          });
+
+          box.addEventListener("input", (e) => {
+            if (isComposing) return;
+            const digits = normalizeDigits(e.target.value).replace(/[^0-9]/g, "");
+            if (!digits) {
+              e.target.value = "";
+              syncSideInputAndCheckComplete();
+              return;
+            }
+            distributeDigitsFrom(i, digits);
+          });
+
+          box.addEventListener("blur", () => {
+            isComposing = false;
+            const d = normalizeDigits(box.value).replace(/[^0-9]/g, "");
+            box.value = d.slice(0, 1);
+            syncSideInputAndCheckComplete();
+          });
+
+          box.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace") {
+              if (box.value) {
+                box.value = "";
+                syncSideInputAndCheckComplete();
+                e.preventDefault();
+              } else if (i > 0) {
+                const prev = document.getElementById(`${prefix}-zip-${i - 1}`);
+                if (prev) {
+                  prev.value = "";
+                  prev.focus();
+                  syncSideInputAndCheckComplete();
+                  e.preventDefault();
+                }
+              }
+            } else if (e.key === "ArrowLeft" && i > 0) {
+              const prev = document.getElementById(`${prefix}-zip-${i - 1}`);
+              if (prev) { prev.focus(); e.preventDefault(); }
+            } else if (e.key === "ArrowRight" && i < 6) {
+              const next = document.getElementById(`${prefix}-zip-${i + 1}`);
+              if (next) { next.focus(); e.preventDefault(); }
+            }
+          });
+        }
+      }
+
+      function autoFitTypography() {
+        const toggle = document.getElementById("auto-fit-font-toggle");
+        if (toggle && !toggle.checked) return;
+        const toAddr = document.getElementById("canvas-to-address");
+        if (toAddr) {
+          const len = toAddr.value.length;
+          const pt = len > 55 ? 10.5 : len > 42 ? 12 : len > 30 ? 13.5 : 14.5;
+          document.documentElement.style.setProperty("--to-addr-size", pt + "pt");
+        }
+        const toName = document.getElementById("canvas-to-name");
+        if (toName) {
+          const len = toName.value.length;
+          const pt = len > 22 ? 13 : len > 16 ? 15 : len > 11 ? 17 : 18.5;
+          document.documentElement.style.setProperty("--to-name-size", pt + "pt");
+        }
+      }
+
+      async function autoFillAddressFromZip(prefix, zip7, forceOverwrite = false) {
+        const clean = normalizeDigits(zip7).replace(/[^0-9]/g, "");
+        if (clean.length < 7) {
+          if (forceOverwrite) showToast("7桁の郵便番号を入力してください");
+          return;
+        }
+        if (forceOverwrite) showToast(`〒${formatZipHyphen(clean)} の住所をネット検索中...`);
+        const matches = await fetchAddressFromZipOnline(clean);
+        if (!matches || matches.length === 0) {
+          if (forceOverwrite) showToast(`〒${formatZipHyphen(clean)} に該当する住所が見つかりませんでした`);
+          return;
+        }
+        const addrEl = document.getElementById(`canvas-${prefix}-address`);
+        const sideAddrEl = document.getElementById(`side-${prefix}-address`);
+        const first = matches[0];
+        const baseAddr = first.pref + first.city + first.town;
+        if (addrEl && (forceOverwrite || !addrEl.value.trim() || !addrEl.value.startsWith(baseAddr.slice(0, 4)))) {
+          addrEl.value = baseAddr;
+          if (sideAddrEl) sideAddrEl.value = baseAddr;
+          autoFitTypography();
+          showToast(`〒${formatZipHyphen(clean)} → ${baseAddr} をネットから取得しました`);
+        }
+        if (matches.length > 1) {
+          renderSearchResults(matches, prefix);
+        }
+      }
+
+      async function reverseFillZipFromAddress(prefix, showFeedback = false) {
+        const addrEl = document.getElementById(`canvas-${prefix}-address`);
+        const sideAddrEl = document.getElementById(`side-${prefix}-address`);
+        const rawAddr = (addrEl && addrEl.value.trim()) || (sideAddrEl && sideAddrEl.value.trim()) || "";
+        if (!rawAddr) {
+          if (showFeedback) showToast("住所を入力してから「住所⇒郵便番号」ボタンを押してください");
+          return;
+        }
+        if (showFeedback) showToast(`「${rawAddr.slice(0, 18)}...」の郵便番号をネット検索中...`);
+        const results = await fetchZipFromAddressOnline(rawAddr);
+        if (results && results.length > 0) {
+          const best = results[0];
+          setZipToBoxes(prefix, best.zip);
+          if (showFeedback) {
+            showToast(`ネットから 〒${formatZipHyphen(best.zip)} (${best.full}) を取得しました`);
+          }
+          if (results.length > 1) {
+            renderSearchResults(results, prefix);
+          }
+        } else {
+          if (showFeedback) showToast("該当する郵便番号が見つかりませんでした（都道府県・市区町村・町名をご確認ください）");
+        }
+      }
+
+      function renderSearchResults(results, defaultTarget = "to") {
+        const container = document.getElementById("postal-search-results");
+        if (!container) return;
+        if (!results || results.length === 0) {
+          container.innerHTML = `<div style="padding:0.75rem; font-size:0.78rem; color:#64748b; text-align:center;">該当する候補が見つかりませんでした</div>`;
+          return;
+        }
+        container.innerHTML = "";
+        results.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "search-result-item";
+          const fullAddr = item.pref + item.city + item.town;
+          row.innerHTML = `
+            <span class="res-zip">〒${formatZipHyphen(item.zip)}</span>
+            <span class="res-addr">${fullAddr}</span>
+            <div class="res-actions">
+              <button type="button" class="btn btn-outline btn-sm apply-to">届先へ</button>
+              <button type="button" class="btn btn-outline btn-sm apply-from">依頼主へ</button>
+            </div>
+          `;
+          const apply = (p) => {
+            setZipToBoxes(p, item.zip);
+            document.getElementById(`canvas-${p}-address`).value = fullAddr;
+            document.getElementById(`side-${p}-address`).value = fullAddr;
+            autoFitTypography();
+            showToast(`〒${formatZipHyphen(item.zip)} ${fullAddr} を反映しました`);
+          };
+          row.querySelector(".apply-to").addEventListener("click", (e) => { e.stopPropagation(); apply("to"); });
+          row.querySelector(".apply-from").addEventListener("click", (e) => { e.stopPropagation(); apply("from"); });
+          row.addEventListener("click", () => apply(defaultTarget));
+          container.appendChild(row);
+        });
+      }
+
+      const DEFAULT_CONTACTS = [
+        { id: "c1", role: "to", zip: "1000005", address: "東京都千代田区丸の内1丁目9-1 丸の内中央ビル 8F", subname: "株式会社サンプル商事 営業本部", name: "山田 太郎", honorific: "様", tel: "03-1234-5678" },
+        { id: "c2", role: "to", zip: "5300001", address: "大阪府大阪市北区梅田3丁目1-3 ノースゲートビル", subname: "関西支社 総務部", name: "佐藤 花子", honorific: "様", tel: "06-9876-5432" },
+        { id: "c3", role: "from", zip: "1500001", address: "東京都渋谷区神宮前4丁目12-10 表参道オフィス 302", subname: "", name: "鈴木 一郎（クリエイティブスタジオ）", honorific: "", tel: "090-1122-3344" }
+      ];
+      let memoryContacts = DEFAULT_CONTACTS.slice();
+
+      function getFieldState(prefix) {
+        return {
+          zip: getZipFromBoxes(prefix).replace(/\s/g, ""),
+          address: (document.getElementById(`canvas-${prefix}-address`) || {}).value || "",
+          subname: (document.getElementById(`canvas-${prefix}-subname`) || {}).value || "",
+          name: (document.getElementById(`canvas-${prefix}-name`) || {}).value || "",
+          honorific: (document.getElementById(`canvas-${prefix}-honorific`) || {}).value || "",
+          tel: (document.getElementById(`canvas-${prefix}-tel`) || {}).value || ""
+        };
+      }
+
+      function setFieldState(prefix, data) {
+        setZipToBoxes(prefix, data.zip || "");
+        const defaultHon = prefix === "to" ? "様" : "";
+        const honVal = data.honorific !== undefined ? data.honorific : defaultHon;
+        [
+          [`canvas-${prefix}-address`, `side-${prefix}-address`, data.address || ""],
+          [`canvas-${prefix}-subname`, `side-${prefix}-subname`, data.subname || ""],
+          [`canvas-${prefix}-name`, `side-${prefix}-name`, data.name || ""],
+          [`canvas-${prefix}-honorific`, `side-${prefix}-honorific`, honVal],
+          [`canvas-${prefix}-tel`, `side-${prefix}-tel`, data.tel || ""]
+        ].forEach(([cId, sId, val]) => {
+          const c = document.getElementById(cId);
+          const s = document.getElementById(sId);
+          if (c) c.value = val;
+          if (s) s.value = val;
+        });
+        autoFitTypography();
+      }
+
+      function applySettingsState(settings) {
+        if (!settings) return;
+        const root = document.documentElement;
+        if (settings.autoFitFont !== undefined) {
+          const el = document.getElementById("auto-fit-font-toggle");
+          if (el) el.checked = Boolean(settings.autoFitFont);
+        }
+        if (settings.fontFamily) {
+          const el = document.getElementById("select-font-family");
+          if (el) el.value = settings.fontFamily;
+          const fontStack = settings.fontFamily === "mincho"
+            ? '"Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif'
+            : '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", "Noto Sans JP", sans-serif';
+          root.style.setProperty("--label-font", fontStack);
+        }
+        if (settings.stampPrice) {
+          const el = document.getElementById("select-stamp-price");
+          if (el) el.value = String(settings.stampPrice);
+          const disp = document.getElementById("stamp-price-display");
+          if (disp) disp.textContent = String(settings.stampPrice);
+        }
+        const sliderDefs = [
+          ["toAddrSize", "slider-to-addr-size", "val-to-addr-size", "--to-addr-size", "pt"],
+          ["toNameSize", "slider-to-name-size", "val-to-name-size", "--to-name-size", "pt"],
+          ["fromAddrSize", "slider-from-addr-size", "val-from-addr-size", "--from-addr-size", "pt"],
+          ["fromNameSize", "slider-from-name-size", "val-from-name-size", "--from-name-size", "pt"],
+          ["contentsSize", "slider-contents-size", "val-contents-size", "--contents-size", "pt"],
+          ["offsetX", "slider-offset-x", "val-offset-x", "--offset-x", "mm"],
+          ["offsetY", "slider-offset-y", "val-offset-y", "--offset-y", "mm"]
+        ];
+        sliderDefs.forEach(([key, sliderId, valId, cssVar, unit]) => {
+          if (settings[key] !== undefined) {
+            const sl = document.getElementById(sliderId);
+            const vl = document.getElementById(valId);
+            if (sl) sl.value = settings[key];
+            if (vl) vl.textContent = settings[key] + unit;
+            root.style.setProperty(cssVar, settings[key] + unit);
+          }
+        });
+        if (settings.scale !== undefined) {
+          const sl = document.getElementById("slider-scale");
+          const vl = document.getElementById("val-scale");
+          if (sl) sl.value = settings.scale;
+          if (vl) vl.textContent = settings.scale + "%";
+          root.style.setProperty("--print-scale", (Number(settings.scale) / 100).toFixed(2));
+        }
+        if (settings.printMode) {
+          const sheet = document.getElementById("a4-printable-sheet");
+          document.querySelectorAll(".mode-btn").forEach((b) => {
+            const isMatch = b.getAttribute("data-mode") === settings.printMode;
+            b.classList.toggle("active", isMatch);
+          });
+          if (sheet) {
+            sheet.classList.remove("text-only-mode", "cutout-box-mode");
+            if (settings.printMode === "text-only") sheet.classList.add("text-only-mode");
+            else if (settings.printMode === "cutout-box") sheet.classList.add("cutout-box-mode");
+          }
+        }
+        if (settings.showCutLines !== undefined) {
+          const sheet = document.getElementById("a4-printable-sheet");
+          const chk = document.getElementById("toggle-cut-lines");
+          const show = Boolean(settings.showCutLines);
+          if (chk) chk.checked = show;
+          if (sheet) {
+            sheet.classList.toggle("show-cut-lines", show);
+            sheet.classList.toggle("hide-cut-lines", !show);
+          }
+        }
+      }
+
+      function getAppStateAsJson() {
+        const activeModeBtn = document.querySelector(".mode-btn.active");
+        const cutChk = document.getElementById("toggle-cut-lines");
+        return {
+          app: "letterpack-lite-offline",
+          version: "1.2",
+          savedAt: new Date().toISOString(),
+          to: getFieldState("to"),
+          from: getFieldState("from"),
+          contents: (document.getElementById("canvas-contents") || {}).value || "",
+          trackingNumber: (document.getElementById("canvas-tracking-1") || {}).value || "9999-9999-9999",
+          hazardChecks: {
+            noLithium: Boolean((document.getElementById("chk-no-lithium") || {}).checked),
+            noGas: Boolean((document.getElementById("chk-no-gas") || {}).checked),
+            noFlammable: Boolean((document.getElementById("chk-no-flammable") || {}).checked)
+          },
+          settings: {
+            printMode: activeModeBtn ? activeModeBtn.getAttribute("data-mode") : "full-design",
+            showCutLines: cutChk ? Boolean(cutChk.checked) : true,
+            autoFitFont: Boolean((document.getElementById("auto-fit-font-toggle") || {}).checked),
+            fontFamily: (document.getElementById("select-font-family") || {}).value || "gothic",
+            stampPrice: (document.getElementById("select-stamp-price") || {}).value || "430",
+            toAddrSize: Number((document.getElementById("slider-to-addr-size") || {}).value || 14.5),
+            toNameSize: Number((document.getElementById("slider-to-name-size") || {}).value || 18.5),
+            fromAddrSize: Number((document.getElementById("slider-from-addr-size") || {}).value || 10),
+            fromNameSize: Number((document.getElementById("slider-from-name-size") || {}).value || 12),
+            contentsSize: Number((document.getElementById("slider-contents-size") || {}).value || 11.5),
+            offsetX: Number((document.getElementById("slider-offset-x") || {}).value || 0),
+            offsetY: Number((document.getElementById("slider-offset-y") || {}).value || 0),
+            scale: Number((document.getElementById("slider-scale") || {}).value || 100)
+          },
+          addressBook: memoryContacts.slice()
+        };
+      }
+
+      function loadAppStateFromJson(data) {
+        if (!data || typeof data !== "object") {
+          showToast("無効なJSONデータです");
+          return;
+        }
+        if (data.to && typeof data.to === "object") {
+          setFieldState("to", data.to);
+        }
+        if (data.from && typeof data.from === "object") {
+          setFieldState("from", data.from);
+        }
+        if (data.contents !== undefined) {
+          const c = document.getElementById("canvas-contents");
+          const s = document.getElementById("side-contents");
+          if (c) c.value = data.contents;
+          if (s) s.value = data.contents;
+        }
+        if (data.trackingNumber !== undefined) {
+          const t1 = document.getElementById("canvas-tracking-1");
+          const t2 = document.getElementById("canvas-tracking-2");
+          if (t1) t1.value = data.trackingNumber;
+          if (t2) t2.value = data.trackingNumber;
+          renderTrackingBarcodes(data.trackingNumber);
+        }
+        if (data.hazardChecks && typeof data.hazardChecks === "object") {
+          const c1 = document.getElementById("chk-no-lithium");
+          const c2 = document.getElementById("chk-no-gas");
+          const c3 = document.getElementById("chk-no-flammable");
+          if (c1 && data.hazardChecks.noLithium !== undefined) c1.checked = Boolean(data.hazardChecks.noLithium);
+          if (c2 && data.hazardChecks.noGas !== undefined) c2.checked = Boolean(data.hazardChecks.noGas);
+          if (c3 && data.hazardChecks.noFlammable !== undefined) c3.checked = Boolean(data.hazardChecks.noFlammable);
+        }
+        if (Array.isArray(data.addressBook) && data.addressBook.length > 0) {
+          memoryContacts = data.addressBook;
+          renderAddressBook();
+        }
+        if (data.settings && typeof data.settings === "object") {
+          applySettingsState(data.settings);
+        }
+        autoFitTypography();
+        showToast("JSONファイルから入力データを読み込みました");
+      }
+
+      function exportJsonFile() {
+        const state = getAppStateAsJson();
+        const jsonStr = JSON.stringify(state, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const toName = (state.to.name || state.to.subname || "宛名データ").replace(/[\\/:*?"<>|\s]+/g, "_");
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `レターパックライト_${toName}_${dateStr}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`JSONファイル（${a.download}）を保存しました`);
+      }
+
+      function handleJsonFileRead(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const parsed = JSON.parse(String(ev.target.result || "{}"));
+            loadAppStateFromJson(parsed);
+          } catch (err) {
+            showToast("JSONファイルの解析に失敗しました。ファイル形式を確認してください。");
+          }
+        };
+        reader.readAsText(file, "utf-8");
+      }
+
+      function renderAddressBook() {
+        const container = document.getElementById("address-book-list");
+        if (!container) return;
+        const q = ((document.getElementById("address-book-filter") || {}).value || "").trim().toLowerCase();
+        const filtered = memoryContacts.filter((c) => !q || (c.name + c.subname + c.address + c.zip).toLowerCase().includes(q));
+        container.innerHTML = "";
+        filtered.forEach((c) => {
+          const card = document.createElement("div");
+          card.className = "contact-card";
+          card.innerHTML = `
+            <div class="contact-top">
+              <span class="contact-name">${c.name} ${c.honorific || ""}</span>
+              <span class="contact-type-tag">${c.role === "from" ? "ご依頼主用" : "お届け先用"}</span>
+            </div>
+            ${c.subname ? `<div class="contact-detail" style="font-weight:700;">${c.subname}</div>` : ""}
+            <div class="contact-detail">〒${formatZipHyphen(c.zip)} ${c.address}</div>
+            <div class="contact-actions">
+              <button type="button" class="btn btn-accent btn-sm to-btn">お届け先にセット</button>
+              <button type="button" class="btn btn-outline btn-sm from-btn">ご依頼主にセット</button>
+              <button type="button" class="btn btn-outline btn-sm del-btn" style="margin-left:auto; color:#dc2626;">削除</button>
+            </div>
+          `;
+          card.querySelector(".to-btn").addEventListener("click", () => { setFieldState("to", c); showToast(`「${c.name}」をお届け先にセットしました`); });
+          card.querySelector(".from-btn").addEventListener("click", () => { setFieldState("from", c); showToast(`「${c.name}」をご依頼主にセットしました`); });
+          card.querySelector(".del-btn").addEventListener("click", () => {
+            memoryContacts = memoryContacts.filter((item) => item.id !== c.id);
+            renderAddressBook();
+            showToast(`「${c.name}」をアドレス帳から削除しました`);
+          });
+          container.appendChild(card);
+        });
+      }
+
+      function initApp() {
+        initFallbackPostal();
+        setupZipBoxes("to", (z) => autoFillAddressFromZip("to", z, false));
+        setupZipBoxes("from", (z) => autoFillAddressFromZip("from", z, false));
+
+        [
+          ["canvas-to-address", "side-to-address"], ["canvas-to-subname", "side-to-subname"],
+          ["canvas-to-name", "side-to-name"], ["canvas-to-honorific", "side-to-honorific"],
+          ["canvas-to-tel", "side-to-tel"], ["canvas-from-address", "side-from-address"],
+          ["canvas-from-name", "side-from-name"], ["canvas-from-tel", "side-from-tel"],
+          ["canvas-contents", "side-contents"]
+        ].forEach(([cId, sId]) => {
+          const c = document.getElementById(cId);
+          const s = document.getElementById(sId);
+          if (!c || !s) return;
+          c.addEventListener("input", () => { s.value = c.value; autoFitTypography(); });
+          s.addEventListener("input", () => { c.value = s.value; autoFitTypography(); });
+        });
+
+        const t1 = document.getElementById("canvas-tracking-1");
+        const t2 = document.getElementById("canvas-tracking-2");
+        if (t1 && t2) {
+          t1.addEventListener("input", () => { t2.value = t1.value; renderTrackingBarcodes(t1.value); });
+          t2.addEventListener("input", () => { t1.value = t2.value; renderTrackingBarcodes(t2.value); });
+        }
+
+        ["to", "from"].forEach((p) => {
+          const sZip = document.getElementById(`side-${p}-zip`);
+          if (sZip) {
+            sZip.addEventListener("input", () => {
+              const clean = normalizeDigits(sZip.value).replace(/[^0-9]/g, "");
+              setZipToBoxes(p, clean);
+              if (clean.length === 7) autoFillAddressFromZip(p, clean, false);
+            });
+          }
+        });
+
+        setFieldState("to", DEFAULT_CONTACTS[0]);
+        setFieldState("from", DEFAULT_CONTACTS[2]);
+        document.getElementById("canvas-contents").value = "書類（契約書・カタログ一式）";
+        document.getElementById("side-contents").value = "書類（契約書・カタログ一式）";
+        renderTrackingBarcodes("9999-9999-9999");
+        renderAddressBook();
+
+        const abFilter = document.getElementById("address-book-filter");
+        if (abFilter) abFilter.addEventListener("input", renderAddressBook);
+
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+            document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+            btn.classList.add("active");
+            document.getElementById(btn.getAttribute("data-tab")).classList.add("active");
+          });
+        });
+
+        const sheet = document.getElementById("a4-printable-sheet");
+        const toggleCutLines = document.getElementById("toggle-cut-lines");
+        if (toggleCutLines && sheet) {
+          toggleCutLines.addEventListener("change", () => {
+            sheet.classList.toggle("show-cut-lines", toggleCutLines.checked);
+            sheet.classList.toggle("hide-cut-lines", !toggleCutLines.checked);
+          });
+        }
+
+        document.querySelectorAll(".mode-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            const mode = btn.getAttribute("data-mode");
+            sheet.classList.remove("text-only-mode", "cutout-box-mode");
+            if (mode === "text-only") sheet.classList.add("text-only-mode");
+            else if (mode === "cutout-box") sheet.classList.add("cutout-box-mode");
+          });
+        });
+
+        document.querySelectorAll("[data-preset-contents]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const val = btn.getAttribute("data-preset-contents");
+            document.getElementById("canvas-contents").value = val;
+            document.getElementById("side-contents").value = val;
+            showToast(`品名に「${val}」をセットしました`);
+          });
+        });
+
+        [
+          ["slider-to-addr-size", "val-to-addr-size", "--to-addr-size", "pt", true],
+          ["slider-to-name-size", "val-to-name-size", "--to-name-size", "pt", true],
+          ["slider-from-addr-size", "val-from-addr-size", "--from-addr-size", "pt", false],
+          ["slider-from-name-size", "val-from-name-size", "--from-name-size", "pt", false],
+          ["slider-contents-size", "val-contents-size", "--contents-size", "pt", false],
+          ["slider-offset-x", "val-offset-x", "--offset-x", "mm", false],
+          ["slider-offset-y", "val-offset-y", "--offset-y", "mm", false]
+        ].forEach(([sId, vId, cssVar, unit, disableAutoFit]) => {
+          const sl = document.getElementById(sId);
+          const vl = document.getElementById(vId);
+          if (!sl) return;
+          sl.addEventListener("input", () => {
+            if (disableAutoFit) {
+              const toggle = document.getElementById("auto-fit-font-toggle");
+              if (toggle) toggle.checked = false;
+            }
+            if (vl) vl.textContent = sl.value + unit;
+            document.documentElement.style.setProperty(cssVar, sl.value + unit);
+          });
+        });
+
+        const scaleSlider = document.getElementById("slider-scale");
+        if (scaleSlider) {
+          scaleSlider.addEventListener("input", () => {
+            const vl = document.getElementById("val-scale");
+            if (vl) vl.textContent = scaleSlider.value + "%";
+            document.documentElement.style.setProperty("--print-scale", (Number(scaleSlider.value) / 100).toFixed(2));
+          });
+        }
+
+        const fontSelect = document.getElementById("select-font-family");
+        if (fontSelect) {
+          fontSelect.addEventListener("change", () => {
+            const fontStack = fontSelect.value === "mincho"
+              ? '"Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif'
+              : '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", "Noto Sans JP", sans-serif';
+            document.documentElement.style.setProperty("--label-font", fontStack);
+          });
+        }
+
+        const resetCalibBtn = document.getElementById("btn-reset-calibration");
+        if (resetCalibBtn) {
+          resetCalibBtn.addEventListener("click", () => {
+            applySettingsState({
+              autoFitFont: true, fontFamily: "gothic", stampPrice: "430",
+              toAddrSize: 14.5, toNameSize: 18.5, fromAddrSize: 10, fromNameSize: 12, contentsSize: 11.5,
+              offsetX: 0, offsetY: 0, scale: 100
+            });
+            showToast("文字サイズ・位置補正を初期値に戻しました");
+          });
+        }
+
+        document.getElementById("btn-to-zip2addr").addEventListener("click", () => autoFillAddressFromZip("to", getZipFromBoxes("to"), true));
+        document.getElementById("btn-to-addr2zip").addEventListener("click", () => reverseFillZipFromAddress("to", true));
+        document.getElementById("btn-from-zip2addr").addEventListener("click", () => autoFillAddressFromZip("from", getZipFromBoxes("from"), true));
+        document.getElementById("btn-from-addr2zip").addEventListener("click", () => reverseFillZipFromAddress("from", true));
+
+        ["to", "from"].forEach((p) => {
+          const addrEl = document.getElementById(`canvas-${p}-address`);
+          const sideAddrEl = document.getElementById(`side-${p}-address`);
+          const tryAutoZip = () => {
+            const currentZip = getZipFromBoxes(p).replace(/\s/g, "");
+            if (currentZip.length < 7) {
+              reverseFillZipFromAddress(p, false);
+            }
+          };
+          if (addrEl) addrEl.addEventListener("change", tryAutoZip);
+          if (sideAddrEl) sideAddrEl.addEventListener("change", tryAutoZip);
+        });
+
+        const qInput = document.getElementById("universal-postal-query");
+        let searchTimer = null;
+        const runSearch = async () => {
+          const q = qInput.value.trim();
+          if (!q) return;
+          const container = document.getElementById("postal-search-results");
+          if (container) {
+            container.innerHTML = `<div style="padding:0.75rem; font-size:0.78rem; color:#005bab; text-align:center; font-weight:700;">🌐 ネットから「${q}」を検索中...</div>`;
+          }
+          const d = normalizeDigits(q).replace(/[^0-9]/g, "");
+          const results = d.length >= 3
+            ? await fetchAddressFromZipOnline(d)
+            : await fetchZipFromAddressOnline(q);
+          renderSearchResults(results);
+        };
+        qInput.addEventListener("input", () => {
+          if (searchTimer) clearTimeout(searchTimer);
+          searchTimer = setTimeout(runSearch, 280);
+        });
+        qInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (searchTimer) clearTimeout(searchTimer);
+            runSearch();
+          }
+        });
+        document.getElementById("btn-universal-search").addEventListener("click", () => {
+          if (searchTimer) clearTimeout(searchTimer);
+          runSearch();
+        });
+
+        document.getElementById("btn-clear-to").addEventListener("click", () => setFieldState("to", { zip: "", address: "", subname: "", name: "", honorific: "様", tel: "" }));
+        document.getElementById("btn-swap-to-from").addEventListener("click", () => {
+          const t = getFieldState("to");
+          const f = getFieldState("from");
+          setFieldState("to", { ...f, honorific: "様" });
+          setFieldState("from", { ...t, honorific: "" });
+        });
+
+        document.getElementById("btn-save-to-contact").addEventListener("click", () => {
+          memoryContacts.unshift({ id: "c" + Date.now(), role: "to", ...getFieldState("to") });
+          renderAddressBook();
+          showToast("お届け先をアドレス帳に保存しました");
+        });
+        document.getElementById("btn-save-from-contact").addEventListener("click", () => {
+          memoryContacts.unshift({ id: "c" + Date.now(), role: "from", ...getFieldState("from") });
+          renderAddressBook();
+          showToast("ご依頼主をアドレス帳に保存しました");
+        });
+
+        const jsonFileInput = document.getElementById("json-file-input");
+        const triggerLoadJson = () => {
+          if (jsonFileInput) {
+            jsonFileInput.value = "";
+            jsonFileInput.click();
+          }
+        };
+        if (jsonFileInput) {
+          jsonFileInput.addEventListener("change", (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) handleJsonFileRead(file);
+          });
+        }
+
+        ["btn-save-json", "btn-side-save-json", "btn-book-save-json"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.addEventListener("click", exportJsonFile);
+        });
+        ["btn-load-json", "btn-side-load-json", "btn-book-load-json"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.addEventListener("click", triggerLoadJson);
+        });
+
+        window.addEventListener("dragover", (e) => { e.preventDefault(); });
+        window.addEventListener("drop", (e) => {
+          const files = e.dataTransfer && e.dataTransfer.files;
+          if (files && files.length > 0 && files[0].name.toLowerCase().endsWith(".json")) {
+            e.preventDefault();
+            handleJsonFileRead(files[0]);
+          }
+        });
+
+        document.getElementById("btn-header-print").addEventListener("click", () => window.print());
+        document.getElementById("btn-sidebar-print").addEventListener("click", () => window.print());
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initApp);
+      } else {
+        initApp();
+      }
+    })();
+  </script>
+</body>
+</html>
