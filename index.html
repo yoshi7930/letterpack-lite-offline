@@ -1587,11 +1587,7 @@
         });
       }
 
-      const DEFAULT_CONTACTS = [
-        { id: "c1", role: "to", zip: "1000005", address: "東京都千代田区丸の内1丁目9-1 丸の内中央ビル 8F", subname: "株式会社サンプル商事 営業本部", name: "山田 太郎", honorific: "様", tel: "03-1234-5678" },
-        { id: "c2", role: "to", zip: "5300001", address: "大阪府大阪市北区梅田3丁目1-3 ノースゲートビル", subname: "関西支社 総務部", name: "佐藤 花子", honorific: "様", tel: "06-9876-5432" },
-        { id: "c3", role: "from", zip: "1500001", address: "東京都渋谷区神宮前4丁目12-10 表参道オフィス 302", subname: "", name: "鈴木 一郎（クリエイティブスタジオ）", honorific: "", tel: "090-1122-3344" }
-      ];
+      const DEFAULT_CONTACTS = [];
       let memoryContacts = DEFAULT_CONTACTS.slice();
 
       function getFieldState(prefix) {
@@ -1761,7 +1757,7 @@
           if (c2 && data.hazardChecks.noGas !== undefined) c2.checked = Boolean(data.hazardChecks.noGas);
           if (c3 && data.hazardChecks.noFlammable !== undefined) c3.checked = Boolean(data.hazardChecks.noFlammable);
         }
-        if (Array.isArray(data.addressBook) && data.addressBook.length > 0) {
+        if (Array.isArray(data.addressBook)) {
           memoryContacts = data.addressBook;
           renderAddressBook();
         }
@@ -1807,6 +1803,10 @@
         const q = ((document.getElementById("address-book-filter") || {}).value || "").trim().toLowerCase();
         const filtered = memoryContacts.filter((c) => !q || (c.name + c.subname + c.address + c.zip).toLowerCase().includes(q));
         container.innerHTML = "";
+        if (filtered.length === 0) {
+          container.innerHTML = `<div style="padding:1rem; font-size:0.78rem; color:#64748b; text-align:center;">保存された連絡先はありません（「＋ アドレス帳に保存」ボタンで追加できます）</div>`;
+          return;
+        }
         filtered.forEach((c) => {
           const card = document.createElement("div");
           card.className = "contact-card";
@@ -1871,10 +1871,10 @@
           }
         });
 
-        setFieldState("to", DEFAULT_CONTACTS[0]);
-        setFieldState("from", DEFAULT_CONTACTS[2]);
-        document.getElementById("canvas-contents").value = "書類（契約書・カタログ一式）";
-        document.getElementById("side-contents").value = "書類（契約書・カタログ一式）";
+        setFieldState("to", { zip: "", address: "", subname: "", name: "", honorific: "様", tel: "" });
+        setFieldState("from", { zip: "", address: "", subname: "", name: "", honorific: "", tel: "" });
+        document.getElementById("canvas-contents").value = "";
+        document.getElementById("side-contents").value = "";
         renderTrackingBarcodes("9999-9999-9999");
         renderAddressBook();
 
