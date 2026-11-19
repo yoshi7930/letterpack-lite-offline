@@ -876,7 +876,6 @@
           <div class="section-header">
             <h2 class="section-title"><span>アドレス帳一覧</span><span id="address-book-count-badge" class="section-badge">0件</span></h2>
             <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
-              <button type="button" id="btn-book-register-current" class="btn btn-accent btn-sm">＋アドレス帳に登録</button>
               <button type="button" id="btn-book-save-json" class="btn btn-outline btn-sm">📥 JSON保存</button>
               <button type="button" id="btn-book-load-json" class="btn btn-outline btn-sm">📂 JSON読込</button>
               <input type="file" id="book-json-file-input" accept=".json,application/json" style="display:none;" />
@@ -1707,20 +1706,36 @@
         return newRecord;
       }
 
+      function hasValidZipAndAddress(fieldObj) {
+        if (!fieldObj) return false;
+        const cleanZip = normalizeDigits(fieldObj.zip || "").replace(/[^0-9]/g, "");
+        const cleanAddr = (fieldObj.address || "").trim();
+        return cleanZip.length > 0 && cleanAddr.length > 0;
+      }
+
       function registerCurrentContactsToAddressBook(preferredPrefix = null) {
         const toState = getFieldState("to");
         const fromState = getFieldState("from");
-        const hasTo = hasContactContent(toState);
-        const hasFrom = hasContactContent(fromState);
+        const validTo = hasValidZipAndAddress(toState);
+        const validFrom = hasValidZipAndAddress(fromState);
 
-        if (!hasTo && !hasFrom) {
-          showToast("お届け先またはご依頼主の住所・氏名を入力してから「＋アドレス帳に登録」を押してください");
+        // クリックされたボタン側（お届け先 or ご依頼主）の郵便番号と住所が揃っているか確認し、両方揃っていれば両方個別登録する
+        if (preferredPrefix === "to" && !validTo) {
+          showToast("お届け先の「郵便番号」と「住所」の両方を入力してから「＋アドレス帳に登録」を押してください");
+          return;
+        }
+        if (preferredPrefix === "from" && !validFrom) {
+          showToast("ご依頼主の「郵便番号」と「住所」の両方を入力してから「＋アドレス帳に登録」を押してください");
+          return;
+        }
+        if (!validTo && !validFrom) {
+          showToast("郵便番号と住所を入力してから「＋アドレス帳に登録」を押してください");
           return;
         }
 
         const registeredNames = [];
-        // 依頼主・お届け先両方が記載されていれば両方個別でアドレス一覧に登録する
-        if (hasTo && hasFrom) {
+        // 依頼主・お届け先両方の郵便番号・住所が記載されていれば両方個別でアドレス一覧に登録する
+        if (validTo && validFrom) {
           if (preferredPrefix === "from") {
             upsertContactRecord(toState);
             upsertContactRecord(fromState);
@@ -1730,10 +1745,10 @@
           }
           registeredNames.push(toState.name || toState.subname || toState.address.slice(0, 10));
           registeredNames.push(fromState.name || fromState.subname || fromState.address.slice(0, 10));
-        } else if (hasTo) {
+        } else if (validTo) {
           upsertContactRecord(toState);
           registeredNames.push(toState.name || toState.subname || toState.address.slice(0, 12));
-        } else if (hasFrom) {
+        } else if (validFrom) {
           upsertContactRecord(fromState);
           registeredNames.push(fromState.name || fromState.subname || fromState.address.slice(0, 12));
         }
@@ -1745,7 +1760,7 @@
         const bookTabBtn = document.querySelector('.tab-btn[data-tab="tab-book"]');
         if (bookTabBtn) bookTabBtn.click();
 
-        if (hasTo && hasFrom) {
+        if (validTo && validFrom) {
           showToast(`お届け先とご依頼主の両方（2件）を個別でアドレス帳一覧に登録・キャッシュ保存しました`);
         } else {
           showToast(`「${registeredNames[0]}」をアドレス帳一覧に登録・キャッシュ保存しました`);
@@ -2366,10 +2381,6 @@
         document.getElementById("btn-save-from-contact").addEventListener("click", () => {
           registerCurrentContactsToAddressBook("from");
         });
-        const bookRegBtn = document.getElementById("btn-book-register-current");
-        if (bookRegBtn) {
-          bookRegBtn.addEventListener("click", () => registerCurrentContactsToAddressBook(null));
-        }
 
         const jsonFileInput = document.getElementById("json-file-input");
         const bookJsonFileInput = document.getElementById("book-json-file-input");
