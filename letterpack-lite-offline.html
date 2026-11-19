@@ -405,7 +405,7 @@
       <div class="header-actions">
         <div class="db-status-badge">
           <span id="db-status-dot" class="status-dot"></span>
-          <span id="db-status-text">オフライン郵便番号辞書</span>
+          <span id="db-status-text">全国ネットAPI接続</span>
         </div>
         <button type="button" id="btn-swap-to-from" class="btn btn-ghost-light">⇄ 届先/依頼主 入替</button>
         <button type="button" id="btn-clear-to" class="btn btn-ghost-light">✕ 届先クリア</button>
@@ -1009,7 +1009,7 @@
           }
         }
         const badgeText = document.getElementById("db-status-text");
-        if (badgeText) badgeText.textContent = `全国ネットAPI接続 (キャッシュ ${flatRecords.length.toLocaleString()}件)`;
+        if (badgeText) badgeText.textContent = "全国ネットAPI接続";
       }
 
       function addRecordToCache(zip, pref, city, town) {
@@ -1027,7 +1027,7 @@
           arr.push(entry);
           flatRecords.push(entry);
           const badgeText = document.getElementById("db-status-text");
-          if (badgeText) badgeText.textContent = `全国ネットAPI接続 (キャッシュ ${flatRecords.length.toLocaleString()}件)`;
+          if (badgeText) badgeText.textContent = "全国ネットAPI接続";
         }
         return entry;
       }
