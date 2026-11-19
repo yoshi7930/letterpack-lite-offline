@@ -875,10 +875,11 @@
         <div class="panel-section">
           <div class="section-header">
             <h2 class="section-title"><span>アドレス帳一覧</span><span id="address-book-count-badge" class="section-badge">0件</span></h2>
-            <div style="display:flex; gap:0.35rem;">
+            <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
               <button type="button" id="btn-book-register-current" class="btn btn-accent btn-sm">＋アドレス帳に登録</button>
               <button type="button" id="btn-book-save-json" class="btn btn-outline btn-sm">📥 JSON保存</button>
               <button type="button" id="btn-book-load-json" class="btn btn-outline btn-sm">📂 JSON読込</button>
+              <input type="file" id="book-json-file-input" accept=".json,application/json" style="display:none;" />
             </div>
           </div>
           <div class="form-row">
@@ -1930,24 +1931,76 @@
         showToast(`JSONファイル（${a.download}）を保存しました`);
       }
 
-      function exportAddressBookJsonFile() {
-        const payload = {
-          app: "letterpack-lite-offline",
-          type: "address-book-only",
-          version: "1.2",
-          savedAt: new Date().toISOString(),
-          addressBook: memoryContacts.slice()
+      function normalizeContactEntry(raw) {
+        if (!raw || typeof raw !== "object") return null;
+        const cleanZip = normalizeDigits(raw.zip || "").replace(/[^0-9]/g, "");
+        const cleanAddr = String(raw.address || "").trim();
+        const cleanName = String(raw.name || "").trim();
+        const cleanSub = String(raw.subname || "").trim();
+        const cleanTel = String(raw.tel || "").trim();
+        const cleanHon = String(raw.honorific || "").trim();
+        if (!cleanName && !cleanSub && !cleanAddr && !cleanZip) return null;
+        return {
+          id: raw.id ? String(raw.id) : ("c_" + Date.now() + "_" + Math.floor(Math.random() * 100000)),
+          zip: cleanZip,
+          address: cleanAddr,
+          subname: cleanSub,
+          name: cleanName,
+          honorific: cleanHon,
+          tel: cleanTel
         };
-        const jsonStr = JSON.stringify(payload, null, 2);
+      }
+
+      function exportAddressBookJsonFile() {
+        if (!memoryContacts || memoryContacts.length === 0) {
+          showToast("アドレス帳に登録されたデータがありません（「＋アドレス帳に登録」で登録してから保存してください）");
+          return;
+        }
+        const cleanList = memoryContacts
+          .map(normalizeContactEntry)
+          .filter(Boolean);
+        const jsonStr = JSON.stringify(cleanList, null, 2);
         const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const dateStr = new Date().toISOString().slice(0, 10);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `レターパックライト_アドレス帳_${dateStr}.json`;
+        a.style.display = "none";
+        a.download = `レターパックライト_アドレス帳一覧_${dateStr}.json`;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(url);
-        showToast(`アドレス帳をJSONファイル（${a.download}）に保存しました`);
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast(`アドレス帳一覧（${cleanList.length}件）をJSONファイル（${a.download}）に保存しました`);
+      }
+
+      function importAddressBookList(rawList) {
+        if (!Array.isArray(rawList)) return false;
+        const imported = rawList.map(normalizeContactEntry).filter(Boolean);
+        if (imported.length === 0 && rawList.length > 0) {
+          showToast("有効なアドレス帳データが見つかりませんでした");
+          return false;
+        }
+        // 既存の登録データと重複しないように統合（読み込んだデータを優先して一覧へ反映）
+        const combined = [];
+        const seen = new Set();
+        [...imported, ...memoryContacts].forEach((c) => {
+          const norm = normalizeContactEntry(c);
+          if (!norm) return;
+          const key = `${norm.name}|${norm.subname}|${norm.address}|${norm.zip}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            combined.push(norm);
+          }
+        });
+        memoryContacts = combined;
+        selectedContactId = null;
+        saveAddressBookToCache();
+        renderAddressBook();
+        const bookTabBtn = document.querySelector('.tab-btn[data-tab="tab-book"]');
+        if (bookTabBtn) bookTabBtn.click();
+        showToast(`JSONファイルからアドレス帳データ一覧（${imported.length}件）を読み込みました（計${memoryContacts.length}件）`);
+        return true;
       }
 
       function handleJsonFileRead(file, addressBookOnly = false) {
@@ -1957,14 +2010,31 @@
           try {
             const parsed = JSON.parse(String(ev.target.result || "{}"));
             if (addressBookOnly) {
-              const list = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.addressBook) ? parsed.addressBook : null);
+              const list = Array.isArray(parsed)
+                ? parsed
+                : (parsed && Array.isArray(parsed.addressBook) ? parsed.addressBook : (parsed && Array.isArray(parsed.contacts) ? parsed.contacts : null));
               if (list) {
-                memoryContacts = list;
-                saveAddressBookToCache();
-                renderAddressBook();
-                showToast(`JSONファイルからアドレス帳一覧（${memoryContacts.length}件）を読み込みました`);
+                importAddressBookList(list);
                 return;
               }
+              // 単一の連絡先オブジェクト、または to/from を含むJSONだった場合もアドレス帳一覧へ抽出して取り込む
+              const extracted = [];
+              if (parsed && typeof parsed === "object") {
+                if (parsed.to && hasContactContent(parsed.to)) extracted.push(parsed.to);
+                if (parsed.from && hasContactContent(parsed.from)) extracted.push(parsed.from);
+                if (extracted.length === 0 && hasContactContent(parsed)) extracted.push(parsed);
+              }
+              if (extracted.length > 0) {
+                importAddressBookList(extracted);
+                return;
+              }
+              showToast("このJSONファイルにはアドレス帳データが含まれていません");
+              return;
+            }
+            if (Array.isArray(parsed) || (parsed && parsed.type === "address-book-only" && Array.isArray(parsed.addressBook))) {
+              const list = Array.isArray(parsed) ? parsed : parsed.addressBook;
+              importAddressBookList(list);
+              return;
             }
             loadAppStateFromJson(parsed);
           } catch (err) {
@@ -2302,34 +2372,40 @@
         }
 
         const jsonFileInput = document.getElementById("json-file-input");
-        let loadAddressBookOnlyMode = false;
-        const triggerLoadJson = (addressBookOnly = false) => {
-          if (jsonFileInput) {
-            loadAddressBookOnlyMode = Boolean(addressBookOnly);
-            jsonFileInput.value = "";
-            jsonFileInput.click();
-          }
-        };
+        const bookJsonFileInput = document.getElementById("book-json-file-input");
+
         if (jsonFileInput) {
           jsonFileInput.addEventListener("change", (e) => {
             const file = e.target.files && e.target.files[0];
-            if (file) handleJsonFileRead(file, loadAddressBookOnlyMode);
+            if (file) handleJsonFileRead(file, false);
+          });
+        }
+        if (bookJsonFileInput) {
+          bookJsonFileInput.addEventListener("change", (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) handleJsonFileRead(file, true);
           });
         }
 
-        ["btn-save-json", "btn-side-save-json"].forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.addEventListener("click", exportJsonFile);
-        });
+        const sideSaveBtn = document.getElementById("btn-side-save-json");
+        if (sideSaveBtn) sideSaveBtn.addEventListener("click", exportJsonFile);
+        const sideLoadBtn = document.getElementById("btn-side-load-json");
+        if (sideLoadBtn && jsonFileInput) {
+          sideLoadBtn.addEventListener("click", () => {
+            jsonFileInput.value = "";
+            jsonFileInput.click();
+          });
+        }
+
         const bookSaveBtn = document.getElementById("btn-book-save-json");
         if (bookSaveBtn) bookSaveBtn.addEventListener("click", exportAddressBookJsonFile);
-
-        ["btn-load-json", "btn-side-load-json"].forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.addEventListener("click", () => triggerLoadJson(false));
-        });
         const bookLoadBtn = document.getElementById("btn-book-load-json");
-        if (bookLoadBtn) bookLoadBtn.addEventListener("click", () => triggerLoadJson(true));
+        if (bookLoadBtn && bookJsonFileInput) {
+          bookLoadBtn.addEventListener("click", () => {
+            bookJsonFileInput.value = "";
+            bookJsonFileInput.click();
+          });
+        }
 
         window.addEventListener("dragover", (e) => { e.preventDefault(); });
         window.addEventListener("drop", (e) => {
