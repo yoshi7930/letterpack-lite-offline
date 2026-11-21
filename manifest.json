@@ -3,7 +3,7 @@
   "short_name": "letapaX",
   "description": "レターパックライト 宛名ラベル作成・PDF印刷ソフト（実物デザイン完全再現・オフライン対応）",
   "start_url": "./index.html",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#eef2f6",
   "theme_color": "#005bab",
   "icons": [
