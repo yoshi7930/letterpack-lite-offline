@@ -421,9 +421,12 @@
     @page { size: A4 portrait; margin: 0; }
     @media print {
       html, body { width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; overflow: hidden !important; }
-      .app-header, .stage-toolbar, .control-sidebar, .inline-screen-tools, .toast-container, .pwa-print-modal-backdrop, .no-print { display: none !important; }
+      .app-header, .stage-toolbar, .control-sidebar, .inline-screen-tools, .toast-container, .pwa-print-modal-backdrop, .lp-left-col, .lp-right-edge-notes, .no-print { display: none !important; }
       .workspace, .preview-stage, .sheet-scroll-container { display: block !important; width: 210mm !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
-      .a4-sheet { width: 210mm !important; height: 297mm !important; min-height: 297mm !important; margin: 0 !important; padding: 2.5mm 3mm !important; box-shadow: none !important; border: none !important; page-break-after: avoid !important; break-after: avoid !important; }
+      .a4-sheet { width: 210mm !important; height: 297mm !important; min-height: 297mm !important; margin: 0 !important; padding: 10mm 0 !important; box-shadow: none !important; border: none !important; page-break-after: avoid !important; break-after: avoid !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
+      .lp-envelope { width: 176mm !important; min-height: 274mm !important; border-color: transparent !important; transform-origin: center center !important; }
+      .lp-envelope-body { padding: 3mm 0 !important; align-items: center !important; }
+      .lp-two-col-grid { display: flex !important; justify-content: center !important; width: 100% !important; }
       .canvas-editable::placeholder, .top-zip-box::placeholder, .from-zip-box::placeholder { color: transparent !important; }
       .canvas-editable, .sama-select { background-color: transparent !important; box-shadow: none !important; border-color: transparent !important; }
     }
@@ -1050,7 +1053,13 @@
           </div>
           <div class="slider-row">
             <div class="slider-header"><span>全体スケール</span><span id="val-scale" class="slider-val">100%</span></div>
-            <input type="range" id="slider-scale" class="range-slider" min="85" max="120" step="1" value="100" />
+            <input type="range" id="slider-scale" class="range-slider" min="80" max="140" step="1" value="100" />
+            <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.4rem;">
+              <button type="button" class="btn btn-outline btn-sm" data-preset-scale="100">100% (PC標準)</button>
+              <button type="button" class="btn btn-outline btn-sm" data-preset-scale="108">108% (AirPrint余白補正)</button>
+              <button type="button" class="btn btn-outline btn-sm" data-preset-scale="115">115% (大)</button>
+              <button type="button" class="btn btn-outline btn-sm" data-preset-scale="125">125% (特大)</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1060,14 +1069,28 @@
   <div id="toast-container" class="toast-container no-print"></div>
 
   <div id="pwa-print-modal-backdrop" class="pwa-print-modal-backdrop no-print" role="dialog" aria-modal="true" aria-labelledby="pwa-print-modal-title">
-    <div class="pwa-print-modal" style="max-width:560px; max-height:92vh; overflow-y:auto;">
-      <h3 id="pwa-print-modal-title">🖨️ A4原寸 PDF / 印刷プレビュー（PWA直接印刷・保存）</h3>
-      <p style="margin-bottom:0.5rem;">
-        下の<strong>「📤 共有メニューから印刷 / PDF保存」</strong>を押すと、iPhone / iPad のシステム共有シートが開き、そのまま<strong>「プリント（AirPrint）」</strong>または<strong>「"ファイル"に保存」</strong>ができます。
+    <div class="pwa-print-modal" style="max-width:560px; max-height:94vh; overflow-y:auto;">
+      <h3 id="pwa-print-modal-title">🖨️ A4原寸 PDF / 印刷プレビュー（サイズ補正付き）</h3>
+      <p style="margin-bottom:0.45rem;">
+        iPhone / iPad の AirPrint でプリンター側の余白設定により枠が縮小されて印刷される場合は、下の<strong>「印刷サイズ倍率（AirPrint縮小補正）」</strong>を <strong>108%〜125%</strong> に上げてから印刷してください。
       </p>
-      <div id="pwa-render-preview-wrap" style="background:#e2e8f0; border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; margin-bottom:0.75rem; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px;">
+      <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:0.6rem 0.75rem; margin-bottom:0.65rem;">
+        <div class="slider-header" style="margin-bottom:0.3rem;">
+          <span>📐 印刷サイズ倍率（AirPrint縮小補正）</span>
+          <span id="modal-val-scale" class="slider-val" style="font-size:0.9rem;">108%</span>
+        </div>
+        <input type="range" id="modal-slider-scale" class="range-slider" min="85" max="140" step="1" value="108" />
+        <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.35rem;">
+          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="100">100% (等倍)</button>
+          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="108">108% (AirPrint標準補正)</button>
+          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="115">115% (1回り拡大)</button>
+          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="125">125% (2〜3回り拡大)</button>
+          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="135">135% (最大枠)</button>
+        </div>
+      </div>
+      <div id="pwa-render-preview-wrap" style="background:#e2e8f0; border:1px solid var(--border-color); border-radius:8px; padding:0.45rem; margin-bottom:0.65rem; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px;">
         <div id="pwa-render-status" style="font-size:0.82rem; font-weight:700; color:var(--lp-blue-deep); padding:1rem;">⏳ A4原寸（210mm×297mm）の印刷用データを生成しています...</div>
-        <img id="pwa-render-img" alt="A4原寸印刷プレビュー" style="display:none; width:100%; max-width:340px; height:auto; background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:4px;" />
+        <img id="pwa-render-img" alt="A4原寸印刷プレビュー" style="display:none; width:100%; max-width:300px; height:auto; background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:4px;" />
       </div>
       <div class="pwa-print-modal-actions">
         <button type="button" id="btn-pwa-native-share-pdf" class="btn btn-accent" style="padding:0.78rem; font-size:0.95rem; justify-content:center;">
@@ -2663,13 +2686,13 @@
           pushStr("%PDF-1.4\n%\xFF\xFF\xFF\xFF\n");
 
           startObj();
-          pushStr("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+          pushStr("1 0 obj\n<< /Type /Catalog /Pages 2 0 R /ViewerPreferences << /PrintScaling /None >> >>\nendobj\n");
 
           startObj();
           pushStr("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
 
           startObj();
-          pushStr(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
+          pushStr(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /CropBox [0 0 ${pageW} ${pageH}] /BleedBox [0 0 ${pageW} ${pageH}] /TrimBox [0 0 ${pageW} ${pageH}] /UserUnit 1.0 /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
 
           startObj();
           pushStr(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imgWidthPx} /Height ${imgHeightPx} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`);
@@ -2719,10 +2742,10 @@
           const offY = (Number(settings.offsetY) || 0) * MM;
 
           ctx.save();
-          // Transform origin top-center (105mm, 2.5mm)
-          ctx.translate(105 * MM + offX, 2.5 * MM + offY);
+          // Transform origin at center of the address unit (105mm, 110mm) so scaling up to 130% never clips the top or right edge
+          ctx.translate(105 * MM + offX, 110 * MM + offY);
           ctx.scale(scaleVal, scaleVal);
-          ctx.translate(-105 * MM, -2.5 * MM);
+          ctx.translate(-105 * MM, -110 * MM);
 
           const ptToPx = (pt) => pt * (25.4 / 72) * MM;
 
@@ -2772,75 +2795,56 @@
             ctx.restore();
           }
 
-          // Envelope outer coordinates: width 204mm (x: 3mm to 207mm), height 292mm (y: 2.5mm to 294.5mm)
-          const envX = 3 * MM;
-          const envY = 2.5 * MM;
-          const envW = 204 * MM;
-          const envH = 292 * MM;
+          // Center the 158.2mm address table horizontally on the 210mm A4 page:
+          // (210 - 158.2) / 2 = 25.9mm left & right margin!
+          // Having ~26mm of white margin on left/right and 18mm on top prevents printers/AirPrint from shrinking the page!
+          const centerColW = 158.2 * MM;
+          const centerColX = ((210 - 158.2) / 2) * MM; // 25.9mm
+          const bodyTopY = 17.5 * MM;
 
           if (isFull) {
-            ctx.strokeStyle = "#cbd5e1";
-            ctx.lineWidth = 0.3 * MM;
-            ctx.strokeRect(envX, envY, envW, envH);
-
-            // Top & bottom blue ribbons
-            [envY, envY + envH - 6.5 * MM].forEach((ry) => {
+            // Top & bottom blue ribbons within printable safe zone (x: 12mm to 198mm, width 186mm)
+            const ribX = 12 * MM;
+            const ribW = 186 * MM;
+            [9 * MM, 281 * MM].forEach((ry) => {
               ctx.fillStyle = BLUE;
-              ctx.fillRect(envX, ry, envW, 6.5 * MM);
+              ctx.fillRect(ribX, ry, ribW, 5.8 * MM);
               ctx.fillStyle = "#ffffff";
-              ctx.font = `italic 900 ${ptToPx(7.5)}px ${fontStack}`;
+              ctx.font = `italic 900 ${ptToPx(7.2)}px ${fontStack}`;
               ctx.textBaseline = "middle";
               ctx.textAlign = "center";
               for (let i = 0; i < 6; i++) {
-                ctx.fillText("レターパックライト", envX + (envW / 6) * (i + 0.5), ry + 3.25 * MM);
+                ctx.fillText("レターパックライト", ribX + (ribW / 6) * (i + 0.5), ry + 2.9 * MM);
               }
             });
-          }
 
-          // Two-column layout geometry matching CSS (.lp-two-col-grid: 32mm | 158.2mm | 3.5mm, gap 2mm)
-          // Total grid width = 32 + 2 + 158.2 + 2 + 3.5 = 197.7mm, centered in 204mm -> starts at 3 + 3.15 = 6.15mm
-          const leftColX = 6.15 * MM;
-          const centerColX = (6.15 + 32 + 2) * MM; // 40.15mm
-          const centerColW = 158.2 * MM;
-          const bodyTopY = (2.5 + 6.5 + 2.5) * MM; // 11.5mm
-
-          // Left column: 430 / 370 Stamp
-          if (isFull) {
-            const stampX = leftColX + 1 * MM;
-            const stampY = bodyTopY + 31.7 * MM;
-            const stampW = 30 * MM;
-            const stampH = 28 * MM;
+            // Compact 430 / 370 Stamp badge placed neatly to the left of the top 7-digit zip boxes (inside the 158.2mm column width so it doesn't widen the page!)
+            const stampX = centerColX;
+            const stampY = bodyTopY;
+            const stampW = 28 * MM;
+            const stampH = 24 * MM;
             ctx.fillStyle = BLUE;
             ctx.fillRect(stampX, stampY, stampW, stampH);
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
             ctx.textBaseline = "top";
-            ctx.font = `italic 900 ${ptToPx(8.2)}px ${fontStack}`;
-            ctx.fillText("レターパック", stampX + stampW / 2, stampY + 2.2 * MM);
-            ctx.font = `italic 900 ${ptToPx(15.5)}px ${fontStack}`;
-            ctx.fillText("ライト", stampX + stampW / 2, stampY + 6.2 * MM);
-            ctx.font = `900 ${ptToPx(24)}px "Arial Black", sans-serif`;
-            ctx.fillText(String(settings.stampPrice || "430"), stampX + stampW / 2, stampY + 13.2 * MM);
+            ctx.font = `italic 900 ${ptToPx(7.5)}px ${fontStack}`;
+            ctx.fillText("レターパック", stampX + stampW / 2, stampY + 1.6 * MM);
+            ctx.font = `italic 900 ${ptToPx(13.5)}px ${fontStack}`;
+            ctx.fillText("ライト", stampX + stampW / 2, stampY + 5.0 * MM);
+            ctx.font = `900 ${ptToPx(20)}px "Arial Black", sans-serif`;
+            ctx.fillText(String(settings.stampPrice || "430"), stampX + stampW / 2, stampY + 11.0 * MM);
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
-            ctx.lineWidth = 0.25 * MM;
+            ctx.lineWidth = 0.22 * MM;
             ctx.beginPath();
-            ctx.moveTo(stampX + 2 * MM, stampY + 23.2 * MM);
-            ctx.lineTo(stampX + stampW - 2 * MM, stampY + 23.2 * MM);
+            ctx.moveTo(stampX + 1.8 * MM, stampY + 19.6 * MM);
+            ctx.lineTo(stampX + stampW - 1.8 * MM, stampY + 19.6 * MM);
             ctx.stroke();
-            ctx.font = `800 ${ptToPx(5.5)}px ${fontStack}`;
+            ctx.font = `800 ${ptToPx(5)}px ${fontStack}`;
             ctx.textAlign = "left";
-            ctx.fillText("NIPPON", stampX + 2.2 * MM, stampY + 24.2 * MM);
+            ctx.fillText("NIPPON", stampX + 2 * MM, stampY + 20.4 * MM);
             ctx.textAlign = "right";
-            ctx.fillText("日本郵便", stampX + stampW - 2.2 * MM, stampY + 24.2 * MM);
-
-            // Fold notice
-            const foldY = stampY + stampH + 66 * MM;
-            ctx.fillStyle = "#64748b";
-            ctx.font = `600 ${ptToPx(4.8)}px ${fontStack}`;
-            ctx.textAlign = "center";
-            ctx.fillText("この線より上は封筒ののりしろですので", leftColX + 16 * MM, foldY);
-            ctx.fillText("何も書いたり貼ったりしないでください。", leftColX + 16 * MM, foldY + 2.4 * MM);
-            drawDottedHLine(leftColX, leftColX + 32 * MM, foldY + 5 * MM, "#94a3b8");
+            ctx.fillText("日本郵便", stampX + stampW - 2 * MM, stampY + 20.4 * MM);
           }
 
           // Top 7-digit zip boxes (10.0mm x 13.4mm, right-aligned to centerColX + centerColW)
@@ -2915,12 +2919,12 @@
             ctx.beginPath(); ctx.moveTo(cx + cw - cm, cy + ch); ctx.lineTo(cx + cw, cy + ch); ctx.lineTo(cx + cw, cy + ch - cm); ctx.stroke();
 
             ctx.fillStyle = "#ffffff";
-            ctx.fillRect(cx + 5 * MM, cy - 1.6 * MM, 96 * MM, 3.2 * MM);
+            ctx.fillRect(cx + 5 * MM, cy - 1.6 * MM, 108 * MM, 3.2 * MM);
             ctx.fillStyle = "#334155";
             ctx.font = `800 ${ptToPx(5.5)}px ${fontStack}`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillText("✂ キリトリ線（郵便番号＋宛名枠・この1枠を切り取るだけでそのまま貼付できます）", cx + 6 * MM, cy);
+            ctx.fillText(`✂ キリトリ線（実物枠幅 158.2mm × 縦 150.9mm / 現在の倍率 ${Math.round(scaleVal * 100)}%）`, cx + 6 * MM, cy);
             ctx.restore();
           }
 
@@ -3349,6 +3353,56 @@
         const pwaNativeShareBtn = document.getElementById("btn-pwa-native-share-pdf");
         const pwaDownloadPdfBtn = document.getElementById("btn-pwa-download-pdf");
 
+        const modalScaleSlider = document.getElementById("modal-slider-scale");
+        const modalValScale = document.getElementById("modal-val-scale");
+
+        function setGlobalPrintScale(newScalePercent, regeneratePdf = false) {
+          const val = Math.max(80, Math.min(140, Number(newScalePercent) || 100));
+          const sl = document.getElementById("slider-scale");
+          const vl = document.getElementById("val-scale");
+          if (sl) sl.value = String(val);
+          if (vl) vl.textContent = val + "%";
+          if (modalScaleSlider) modalScaleSlider.value = String(val);
+          if (modalValScale) modalValScale.textContent = val + "%";
+          document.documentElement.style.setProperty("--print-scale", (val / 100).toFixed(2));
+          saveCurrentDraftToCache();
+          if (regeneratePdf) {
+            preparePwaPrintAssets();
+          }
+        }
+
+        document.querySelectorAll("[data-preset-scale]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const sc = Number(btn.getAttribute("data-preset-scale")) || 100;
+            setGlobalPrintScale(sc, false);
+            showToast(`印刷倍率を ${sc}% に設定しました`);
+          });
+        });
+
+        document.querySelectorAll("[data-modal-scale]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const sc = Number(btn.getAttribute("data-modal-scale")) || 100;
+            setGlobalPrintScale(sc, true);
+            showToast(`印刷サイズ倍率を ${sc}% に更新しました`);
+          });
+        });
+
+        if (modalScaleSlider) {
+          modalScaleSlider.addEventListener("input", () => {
+            if (modalValScale) modalValScale.textContent = modalScaleSlider.value + "%";
+          });
+          modalScaleSlider.addEventListener("change", () => {
+            setGlobalPrintScale(modalScaleSlider.value, true);
+          });
+        }
+
+        function syncModalScaleWithCurrent() {
+          const sl = document.getElementById("slider-scale");
+          const currentScale = sl ? Number(sl.value) || 100 : 100;
+          if (modalScaleSlider) modalScaleSlider.value = String(currentScale);
+          if (modalValScale) modalValScale.textContent = currentScale + "%";
+        }
+
         if (pwaCloseBtn && pwaModalBackdrop) {
           pwaCloseBtn.addEventListener("click", () => pwaModalBackdrop.classList.remove("open"));
         }
@@ -3366,8 +3420,7 @@
             if (preparedPwaPdfFile && navigator.share && (!navigator.canShare || navigator.canShare({ files: [preparedPwaPdfFile] }))) {
               try {
                 await navigator.share({
-                  files: [preparedPwaPdfFile],
-                  title: "レターパックライト 宛名ラベル (A4原寸)"
+                  files: [preparedPwaPdfFile]
                 });
                 return;
               } catch (err) {
@@ -3401,9 +3454,16 @@
         document.addEventListener("change", () => saveCurrentDraftToCache());
 
         loadDraftFromCacheOrUrl();
+        syncModalScaleWithCurrent();
 
-        document.getElementById("btn-header-print").addEventListener("click", handlePrintAction);
-        document.getElementById("btn-sidebar-print").addEventListener("click", handlePrintAction);
+        document.getElementById("btn-header-print").addEventListener("click", () => {
+          syncModalScaleWithCurrent();
+          handlePrintAction();
+        });
+        document.getElementById("btn-sidebar-print").addEventListener("click", () => {
+          syncModalScaleWithCurrent();
+          handlePrintAction();
+        });
       }
 
       if (document.readyState === "loading") {
