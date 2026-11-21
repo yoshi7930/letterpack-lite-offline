@@ -1060,24 +1060,26 @@
   <div id="toast-container" class="toast-container no-print"></div>
 
   <div id="pwa-print-modal-backdrop" class="pwa-print-modal-backdrop no-print" role="dialog" aria-modal="true" aria-labelledby="pwa-print-modal-title">
-    <div class="pwa-print-modal">
-      <h3 id="pwa-print-modal-title">🖨️ ホーム画面アプリ（PWA）からの印刷</h3>
-      <p>
-        お使いのiOS / iPadOSの仕様により、ホーム画面に追加したアプリ（スタンドアロンPWAモード）からはシステムの印刷画面がブロックされています。<br />
-        <strong>現在入力中の宛名データ・設定をすべて引き継いだまま</strong>、以下のボタンでSafariブラウザを開いてすぐに印刷できます。
+    <div class="pwa-print-modal" style="max-width:560px; max-height:92vh; overflow-y:auto;">
+      <h3 id="pwa-print-modal-title">🖨️ A4原寸 PDF / 印刷プレビュー（PWA直接印刷・保存）</h3>
+      <p style="margin-bottom:0.5rem;">
+        下の<strong>「📤 共有メニューから印刷 / PDF保存」</strong>を押すと、iPhone / iPad のシステム共有シートが開き、そのまま<strong>「プリント（AirPrint）」</strong>または<strong>「"ファイル"に保存」</strong>ができます。
       </p>
-      <div class="pwa-print-modal-steps">
-        💡 <strong>次回からそのまま印刷ボタンを使えるようにするには：</strong><br />
-        一度ホーム画面のアイコンを削除し、Safariでページを再読み込みしてから再度「ホーム画面に追加」すると、今後はワンタップで直接印刷画面が開きます。
+      <div id="pwa-render-preview-wrap" style="background:#e2e8f0; border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; margin-bottom:0.75rem; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px;">
+        <div id="pwa-render-status" style="font-size:0.82rem; font-weight:700; color:var(--lp-blue-deep); padding:1rem;">⏳ A4原寸（210mm×297mm）の印刷用データを生成しています...</div>
+        <img id="pwa-render-img" alt="A4原寸印刷プレビュー" style="display:none; width:100%; max-width:340px; height:auto; background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:4px;" />
       </div>
       <div class="pwa-print-modal-actions">
-        <a id="btn-pwa-open-safari-print" href="#" target="_blank" rel="noopener" class="btn btn-accent" style="padding:0.75rem; font-size:0.92rem; text-align:center;">
-          🌐 入力データを引き継いでSafariで開いて印刷する
-        </a>
+        <button type="button" id="btn-pwa-native-share-pdf" class="btn btn-accent" style="padding:0.78rem; font-size:0.95rem; justify-content:center;">
+          📤 共有メニューから「プリント」/ PDF保存（推奨）
+        </button>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-          <button type="button" id="btn-pwa-copy-print-url" class="btn btn-outline" style="padding:0.55rem;">📋 印刷用URLをコピー</button>
-          <button type="button" id="btn-pwa-close-modal" class="btn btn-outline" style="padding:0.55rem;">閉じる</button>
+          <button type="button" id="btn-pwa-download-pdf" class="btn btn-outline" style="padding:0.6rem; justify-content:center;">📥 A4 PDFを保存</button>
+          <a id="btn-pwa-open-safari-print" href="#" target="_blank" rel="noopener" class="btn btn-outline" style="padding:0.6rem; justify-content:center; text-align:center;">
+            🌐 Safariで開いて印刷
+          </a>
         </div>
+        <button type="button" id="btn-pwa-close-modal" class="btn btn-outline" style="padding:0.55rem; justify-content:center;">閉じる</button>
       </div>
     </div>
   </div>
@@ -2624,12 +2626,682 @@
           );
         }
 
+        let preparedPwaPdfFile = null;
+        let preparedPwaPngDataUrl = null;
+
+        function buildSinglePagePdfFromJpegDataUrl(jpegDataUrl, imgWidthPx, imgHeightPx) {
+          const base64 = jpegDataUrl.split(",")[1] || "";
+          const rawStr = atob(base64);
+          const jpegBytes = new Uint8Array(rawStr.length);
+          for (let i = 0; i < rawStr.length; i++) {
+            jpegBytes[i] = rawStr.charCodeAt(i);
+          }
+
+          // Exact A4 dimensions in PostScript points (1pt = 1/72 inch): 210mm = 595.28pt, 297mm = 841.89pt
+          const pageW = 595.28;
+          const pageH = 841.89;
+          const contentStream = `q\n${pageW} 0 0 ${pageH} 0 0 cm\n/Im0 Do\nQ\n`;
+
+          const encoder = new TextEncoder();
+          const chunks = [];
+          const offsets = [0];
+          let byteCount = 0;
+
+          function pushStr(str) {
+            const b = encoder.encode(str);
+            chunks.push(b);
+            byteCount += b.length;
+          }
+          function pushBytes(b) {
+            chunks.push(b);
+            byteCount += b.length;
+          }
+          function startObj() {
+            offsets.push(byteCount);
+          }
+
+          pushStr("%PDF-1.4\n%\xFF\xFF\xFF\xFF\n");
+
+          startObj();
+          pushStr("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+
+          startObj();
+          pushStr("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
+
+          startObj();
+          pushStr(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`);
+
+          startObj();
+          pushStr(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imgWidthPx} /Height ${imgHeightPx} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`);
+          pushBytes(jpegBytes);
+          pushStr("\nendstream\nendobj\n");
+
+          startObj();
+          pushStr(`5 0 obj\n<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\nendobj\n`);
+
+          const xrefOffset = byteCount;
+          pushStr(`xref\n0 ${offsets.length}\n0000000000 65535 f \n`);
+          for (let i = 1; i < offsets.length; i++) {
+            pushStr(String(offsets[i]).padStart(10, "0") + " 00000 n \n");
+          }
+          pushStr(`trailer\n<< /Size ${offsets.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`);
+
+          return new Blob(chunks, { type: "application/pdf" });
+        }
+
+        function renderA4SheetToCanvas() {
+          const state = getAppStateAsJson();
+          const settings = state.settings || {};
+          const mode = settings.printMode || "full-design";
+          const showCut = settings.showCutLines !== false;
+          const isTextOnly = mode === "text-only";
+          const isCutout = mode === "cutout-box";
+          const isFull = mode === "full-design";
+
+          const fontStack = settings.fontFamily === "mincho"
+            ? '"Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif'
+            : '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", "Noto Sans JP", sans-serif';
+
+          // High-resolution A4 canvas (10 px per mm -> 2100 x 2970 px, ~254 DPI)
+          const MM = 10;
+          const W = 210 * MM;
+          const H = 297 * MM;
+          const canvas = document.createElement("canvas");
+          canvas.width = W;
+          canvas.height = H;
+          const ctx = canvas.getContext("2d");
+
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, W, H);
+
+          const scaleVal = (Number(settings.scale) || 100) / 100;
+          const offX = (Number(settings.offsetX) || 0) * MM;
+          const offY = (Number(settings.offsetY) || 0) * MM;
+
+          ctx.save();
+          // Transform origin top-center (105mm, 2.5mm)
+          ctx.translate(105 * MM + offX, 2.5 * MM + offY);
+          ctx.scale(scaleVal, scaleVal);
+          ctx.translate(-105 * MM, -2.5 * MM);
+
+          const ptToPx = (pt) => pt * (25.4 / 72) * MM;
+
+          const BLUE = "#005bab";
+          const BLUE_MID = "#5b82b8";
+          const BLUE_PALE = "#d3dff0";
+          const RED = "#d7262b";
+          const INK = "#111827";
+          const GRAY_BOX = "#e5e8ec";
+
+          function drawWrappedText(text, x, y, maxWidth, lineHeightPx, maxLines, fontCss, color) {
+            if (!text) return;
+            ctx.save();
+            ctx.font = fontCss;
+            ctx.fillStyle = color;
+            ctx.textBaseline = "middle";
+            const rawLines = String(text).split(/\r?\n/);
+            const lines = [];
+            for (const rl of rawLines) {
+              let current = "";
+              for (const ch of rl) {
+                const test = current + ch;
+                if (ctx.measureText(test).width > maxWidth && current.length > 0) {
+                  lines.push(current);
+                  current = ch;
+                } else {
+                  current = test;
+                }
+              }
+              if (current || rl === "") lines.push(current);
+            }
+            for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
+              ctx.fillText(lines[i], x, y + (i + 0.5) * lineHeightPx);
+            }
+            ctx.restore();
+          }
+
+          function drawDottedHLine(x1, x2, y, color = "#94a3b8") {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 0.28 * MM;
+            ctx.setLineDash([0.8 * MM, 0.8 * MM]);
+            ctx.beginPath();
+            ctx.moveTo(x1, y);
+            ctx.lineTo(x2, y);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // Envelope outer coordinates: width 204mm (x: 3mm to 207mm), height 292mm (y: 2.5mm to 294.5mm)
+          const envX = 3 * MM;
+          const envY = 2.5 * MM;
+          const envW = 204 * MM;
+          const envH = 292 * MM;
+
+          if (isFull) {
+            ctx.strokeStyle = "#cbd5e1";
+            ctx.lineWidth = 0.3 * MM;
+            ctx.strokeRect(envX, envY, envW, envH);
+
+            // Top & bottom blue ribbons
+            [envY, envY + envH - 6.5 * MM].forEach((ry) => {
+              ctx.fillStyle = BLUE;
+              ctx.fillRect(envX, ry, envW, 6.5 * MM);
+              ctx.fillStyle = "#ffffff";
+              ctx.font = `italic 900 ${ptToPx(7.5)}px ${fontStack}`;
+              ctx.textBaseline = "middle";
+              ctx.textAlign = "center";
+              for (let i = 0; i < 6; i++) {
+                ctx.fillText("レターパックライト", envX + (envW / 6) * (i + 0.5), ry + 3.25 * MM);
+              }
+            });
+          }
+
+          // Two-column layout geometry matching CSS (.lp-two-col-grid: 32mm | 158.2mm | 3.5mm, gap 2mm)
+          // Total grid width = 32 + 2 + 158.2 + 2 + 3.5 = 197.7mm, centered in 204mm -> starts at 3 + 3.15 = 6.15mm
+          const leftColX = 6.15 * MM;
+          const centerColX = (6.15 + 32 + 2) * MM; // 40.15mm
+          const centerColW = 158.2 * MM;
+          const bodyTopY = (2.5 + 6.5 + 2.5) * MM; // 11.5mm
+
+          // Left column: 430 / 370 Stamp
+          if (isFull) {
+            const stampX = leftColX + 1 * MM;
+            const stampY = bodyTopY + 31.7 * MM;
+            const stampW = 30 * MM;
+            const stampH = 28 * MM;
+            ctx.fillStyle = BLUE;
+            ctx.fillRect(stampX, stampY, stampW, stampH);
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.font = `italic 900 ${ptToPx(8.2)}px ${fontStack}`;
+            ctx.fillText("レターパック", stampX + stampW / 2, stampY + 2.2 * MM);
+            ctx.font = `italic 900 ${ptToPx(15.5)}px ${fontStack}`;
+            ctx.fillText("ライト", stampX + stampW / 2, stampY + 6.2 * MM);
+            ctx.font = `900 ${ptToPx(24)}px "Arial Black", sans-serif`;
+            ctx.fillText(String(settings.stampPrice || "430"), stampX + stampW / 2, stampY + 13.2 * MM);
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 0.25 * MM;
+            ctx.beginPath();
+            ctx.moveTo(stampX + 2 * MM, stampY + 23.2 * MM);
+            ctx.lineTo(stampX + stampW - 2 * MM, stampY + 23.2 * MM);
+            ctx.stroke();
+            ctx.font = `800 ${ptToPx(5.5)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.fillText("NIPPON", stampX + 2.2 * MM, stampY + 24.2 * MM);
+            ctx.textAlign = "right";
+            ctx.fillText("日本郵便", stampX + stampW - 2.2 * MM, stampY + 24.2 * MM);
+
+            // Fold notice
+            const foldY = stampY + stampH + 66 * MM;
+            ctx.fillStyle = "#64748b";
+            ctx.font = `600 ${ptToPx(4.8)}px ${fontStack}`;
+            ctx.textAlign = "center";
+            ctx.fillText("この線より上は封筒ののりしろですので", leftColX + 16 * MM, foldY);
+            ctx.fillText("何も書いたり貼ったりしないでください。", leftColX + 16 * MM, foldY + 2.4 * MM);
+            drawDottedHLine(leftColX, leftColX + 32 * MM, foldY + 5 * MM, "#94a3b8");
+          }
+
+          // Top 7-digit zip boxes (10.0mm x 13.4mm, right-aligned to centerColX + centerColW)
+          const zipTopY = bodyTopY + 0.8 * MM;
+          const zipBoxW = 10.0 * MM;
+          const zipBoxH = 13.4 * MM;
+          // 7 boxes (70mm) + gaps = 83.0mm total width, right aligned to centerColX + centerColW
+          const zipStartX = centerColX + centerColW - 83.0 * MM;
+          const toZipDigits = String(state.to.zip || "").padEnd(7, " ");
+          const zipOffsets = [0, 11.95, 23.9, 36.8, 48.75, 60.7, 72.65];
+
+          for (let i = 0; i < 7; i++) {
+            const bx = zipStartX + zipOffsets[i] * MM;
+            if (!isTextOnly) {
+              ctx.strokeStyle = RED;
+              ctx.lineWidth = (i < 3 ? 0.75 : 0.55) * MM;
+              ctx.fillStyle = "#ffffff";
+              ctx.fillRect(bx, zipTopY, zipBoxW, zipBoxH);
+              ctx.strokeRect(bx, zipTopY, zipBoxW, zipBoxH);
+            }
+            const ch = toZipDigits[i] ? toZipDigits[i].trim() : "";
+            if (ch) {
+              ctx.fillStyle = INK;
+              ctx.font = `800 ${ptToPx(20)}px "Courier New", "BIZ UDPGothic", monospace`;
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(ch, bx + zipBoxW / 2, zipTopY + zipBoxH / 2 + 0.3 * MM);
+            }
+          }
+          if (!isTextOnly) {
+            ctx.fillStyle = RED;
+            ctx.fillRect(zipStartX + 34.2 * MM, zipTopY + zipBoxH / 2 - 0.32 * MM, 2.2 * MM, 0.65 * MM);
+          }
+
+          // Main Address Table Outer (width 158.2mm, height 150.9mm: To 68.6mm + From 53.0mm + Contents 29.3mm)
+          const tableY = zipTopY + zipBoxH + 17.5 * MM;
+          const tableW = 158.2 * MM;
+          const toH = 68.6 * MM;
+          const fromH = 53.0 * MM;
+          const contentsH = 29.3 * MM;
+          const tableH = toH + fromH + contentsH;
+          const sideColW = 32.3 * MM;
+          const fieldsX = centerColX + sideColW;
+          const fieldsW = tableW - sideColW;
+
+          // Unified Cut Guide Frame (when enabled and not text-only)
+          if ((showCut || isCutout) && !isTextOnly) {
+            const cutPad = 1.8 * MM;
+            const cx = centerColX - cutPad;
+            const cy = zipTopY - cutPad;
+            const cw = tableW + cutPad * 2;
+            const ch = (tableY + tableH - zipTopY) + cutPad * 2;
+            ctx.save();
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 0.38 * MM;
+            ctx.setLineDash([1.6 * MM, 1.2 * MM]);
+            ctx.strokeRect(cx, cy, cw, ch);
+            ctx.restore();
+
+            // Corner crop marks
+            ctx.save();
+            ctx.strokeStyle = "#1e293b";
+            ctx.lineWidth = 0.5 * MM;
+            const cm = 3.5 * MM;
+            // TL
+            ctx.beginPath(); ctx.moveTo(cx, cy + cm); ctx.lineTo(cx, cy); ctx.lineTo(cx + cm, cy); ctx.stroke();
+            // TR
+            ctx.beginPath(); ctx.moveTo(cx + cw - cm, cy); ctx.lineTo(cx + cw, cy); ctx.lineTo(cx + cw, cy + cm); ctx.stroke();
+            // BL
+            ctx.beginPath(); ctx.moveTo(cx, cy + ch - cm); ctx.lineTo(cx, cy + ch); ctx.lineTo(cx + cm, cy + ch); ctx.stroke();
+            // BR
+            ctx.beginPath(); ctx.moveTo(cx + cw - cm, cy + ch); ctx.lineTo(cx + cw, cy + ch); ctx.lineTo(cx + cw, cy + ch - cm); ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(cx + 5 * MM, cy - 1.6 * MM, 96 * MM, 3.2 * MM);
+            ctx.fillStyle = "#334155";
+            ctx.font = `800 ${ptToPx(5.5)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText("✂ キリトリ線（郵便番号＋宛名枠・この1枠を切り取るだけでそのまま貼付できます）", cx + 6 * MM, cy);
+            ctx.restore();
+          }
+
+          if (!isTextOnly) {
+            // Sidebars To & From
+            ctx.fillStyle = BLUE_MID;
+            ctx.fillRect(centerColX, tableY, sideColW, toH);
+            ctx.fillStyle = BLUE_PALE;
+            ctx.fillRect(centerColX, tableY + toH, sideColW, fromH);
+
+            // To sidebar text & up arrow
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.font = `900 ${ptToPx(8.5)}px ${fontStack}`;
+            ctx.fillText("お届け先", centerColX + sideColW / 2, tableY + 6.5 * MM);
+            ctx.font = `900 ${ptToPx(20)}px "Arial", sans-serif`;
+            ctx.fillText("To", centerColX + sideColW / 2, tableY + 11.2 * MM);
+
+            // Up arrow in To sidebar
+            const arrCx = centerColX + sideColW / 2;
+            const arrBot = tableY + toH;
+            const arrTop = arrBot - 26 * MM;
+            ctx.beginPath();
+            ctx.moveTo(arrCx, arrTop);
+            ctx.lineTo(arrCx - 6.5 * MM, arrTop + 9 * MM);
+            ctx.lineTo(arrCx - 2.2 * MM, arrTop + 9 * MM);
+            ctx.lineTo(arrCx - 2.2 * MM, arrBot);
+            ctx.lineTo(arrCx + 2.2 * MM, arrBot);
+            ctx.lineTo(arrCx + 2.2 * MM, arrTop + 9 * MM);
+            ctx.lineTo(arrCx + 6.5 * MM, arrTop + 9 * MM);
+            ctx.closePath();
+            ctx.fill();
+
+            // From sidebar text & tail squares
+            ctx.fillStyle = BLUE;
+            for (let sq = 0; sq < 4; sq++) {
+              ctx.fillRect(arrCx - 2.1 * MM, tableY + toH + (2 + sq * 3.2) * MM, 4.2 * MM, 1.8 * MM);
+            }
+            ctx.fillStyle = INK;
+            ctx.font = `900 ${ptToPx(8.5)}px ${fontStack}`;
+            ctx.fillText("ご依頼主", arrCx, tableY + toH + 17 * MM);
+            ctx.font = `900 ${ptToPx(13)}px "Arial", sans-serif`;
+            ctx.fillText("From", arrCx, tableY + toH + 21.5 * MM);
+
+            // Table borders
+            ctx.strokeStyle = INK;
+            ctx.lineWidth = 0.5 * MM;
+            ctx.strokeRect(centerColX, tableY, tableW, tableH);
+            ctx.beginPath();
+            ctx.moveTo(centerColX, tableY + toH);
+            ctx.lineTo(centerColX + tableW, tableY + toH);
+            ctx.moveTo(centerColX, tableY + toH + fromH);
+            ctx.lineTo(centerColX + tableW, tableY + toH + fromH);
+            ctx.moveTo(fieldsX, tableY);
+            ctx.lineTo(fieldsX, tableY + toH + fromH);
+            ctx.stroke();
+          }
+
+          function drawBilingualCap(jp, en, x, y) {
+            if (isTextOnly) return;
+            ctx.save();
+            ctx.fillStyle = INK;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.font = `800 ${ptToPx(7)}px ${fontStack}`;
+            ctx.fillText(jp, x, y);
+            ctx.font = `700 ${ptToPx(6)}px "Arial", sans-serif`;
+            ctx.fillText(en, x, y + 2.7 * MM);
+            ctx.restore();
+          }
+
+          // --- TO ROW FIELDS ---
+          const toPadX = fieldsX + 3.2 * MM;
+          const toInnerW = fieldsW - 6.4 * MM;
+          drawBilingualCap("おところ：", "Address", toPadX, tableY + 2 * MM);
+          if (!isTextOnly) {
+            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 22.2 * MM);
+            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 36.8 * MM);
+          }
+          const toAddrPt = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--to-addr-size")) || settings.toAddrSize || 15.5;
+          drawWrappedText(
+            state.to.address,
+            toPadX + 1 * MM,
+            tableY + 8 * MM,
+            toInnerW - 2 * MM,
+            14.5 * MM,
+            2,
+            `700 ${ptToPx(toAddrPt)}px ${fontStack}`,
+            INK
+          );
+
+          // To Name block
+          const toNameTopY = tableY + 39 * MM;
+          drawBilingualCap("おなまえ：", "Name", toPadX, toNameTopY);
+          if (!isTextOnly) {
+            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 57.5 * MM);
+          }
+          const toNamePt = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--to-name-size")) || settings.toNameSize || 20;
+          if (state.to.subname) {
+            ctx.fillStyle = INK;
+            ctx.font = `600 ${ptToPx(toNamePt * 0.56)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(state.to.subname, toPadX + 16 * MM, toNameTopY + 3.5 * MM);
+          }
+          if (state.to.name) {
+            ctx.fillStyle = INK;
+            ctx.font = `800 ${ptToPx(toNamePt)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(state.to.name, toPadX + 16 * MM, toNameTopY + 12.2 * MM);
+          }
+          if (state.to.honorific) {
+            ctx.fillStyle = INK;
+            ctx.font = `800 ${ptToPx(15)}px ${fontStack}`;
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillText(state.to.honorific, toPadX + toInnerW - 1 * MM, toNameTopY + 12.5 * MM);
+          }
+
+          // To Tel block
+          const toTelY = tableY + 59.5 * MM;
+          drawBilingualCap("電話番号：", "Telephone Number", toPadX, toTelY);
+          if (!isTextOnly) {
+            ctx.fillStyle = INK;
+            ctx.font = `700 ${ptToPx(11.5)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText("（", toPadX + toInnerW - 68 * MM, toTelY + 3.5 * MM);
+            ctx.fillText("）", toPadX + toInnerW - 12 * MM, toTelY + 3.5 * MM);
+          }
+          if (state.to.tel) {
+            ctx.fillStyle = INK;
+            ctx.font = `700 ${ptToPx(11.5)}px "Courier New", "BIZ UDPGothic", monospace`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(state.to.tel, toPadX + toInnerW - 39 * MM, toTelY + 3.5 * MM);
+          }
+
+          // --- FROM ROW FIELDS ---
+          const fromTopY = tableY + toH;
+          drawBilingualCap("おところ：", "Address", toPadX, fromTopY + 1.8 * MM);
+
+          // From 7 small zip boxes
+          const fZipStartX = toPadX + 18 * MM;
+          const fZipY = fromTopY + 1.6 * MM;
+          const fBoxW = 4.5 * MM;
+          const fBoxH = 6.1 * MM;
+          const fromZipDigits = String(state.from.zip || "").padEnd(7, " ");
+          let fCurX = fZipStartX;
+          for (let i = 0; i < 7; i++) {
+            if (i === 3) {
+              if (!isTextOnly) {
+                ctx.fillStyle = "#94a3b8";
+                ctx.fillRect(fCurX, fZipY + fBoxH / 2 - 0.18 * MM, 1.4 * MM, 0.35 * MM);
+              }
+              fCurX += 2.3 * MM;
+            }
+            if (!isTextOnly) {
+              ctx.strokeStyle = "#94a3b8";
+              ctx.lineWidth = 0.3 * MM;
+              ctx.fillStyle = "#ffffff";
+              ctx.fillRect(fCurX, fZipY, fBoxW, fBoxH);
+              ctx.strokeRect(fCurX, fZipY, fBoxW, fBoxH);
+            }
+            const ch = fromZipDigits[i] ? fromZipDigits[i].trim() : "";
+            if (ch) {
+              ctx.fillStyle = INK;
+              ctx.font = `700 ${ptToPx(10.5)}px "Courier New", "BIZ UDPGothic", monospace`;
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(ch, fCurX + fBoxW / 2, fZipY + fBoxH / 2 + 0.2 * MM);
+            }
+            fCurX += fBoxW + 0.9 * MM;
+          }
+
+          if (!isTextOnly) {
+            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 17.5 * MM);
+            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 26.3 * MM);
+          }
+          const fromAddrPt = Number(settings.fromAddrSize) || 11;
+          drawWrappedText(
+            state.from.address,
+            toPadX + 1 * MM,
+            fromTopY + 9 * MM,
+            toInnerW - 2 * MM,
+            8.8 * MM,
+            2,
+            `600 ${ptToPx(fromAddrPt)}px ${fontStack}`,
+            INK
+          );
+
+          // From Name block
+          const fromNameTopY = fromTopY + 28.5 * MM;
+          drawBilingualCap("おなまえ：", "Name", toPadX, fromNameTopY);
+          if (!isTextOnly) {
+            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 41 * MM);
+          }
+          const fromNamePt = Number(settings.fromNameSize) || 13.5;
+          if (state.from.name) {
+            ctx.fillStyle = INK;
+            ctx.font = `700 ${ptToPx(fromNamePt)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(state.from.name, toPadX + 16 * MM, fromNameTopY + 7.5 * MM);
+          }
+          const fromHonText = isTextOnly ? (state.from.honorific || "") : (state.from.honorific || "様");
+          if (fromHonText) {
+            ctx.fillStyle = INK;
+            ctx.font = `800 ${ptToPx(11)}px ${fontStack}`;
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            ctx.fillText(fromHonText, toPadX + toInnerW - 1 * MM, fromNameTopY + 7.5 * MM);
+          }
+
+          // From Tel block
+          const fromTelY = fromTopY + 43 * MM;
+          drawBilingualCap("電話番号：", "Telephone Number", toPadX, fromTelY);
+          if (!isTextOnly) {
+            ctx.fillStyle = INK;
+            ctx.font = `700 ${ptToPx(11.5)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText("（", toPadX + toInnerW - 68 * MM, fromTelY + 3.5 * MM);
+            ctx.fillText("）", toPadX + toInnerW - 12 * MM, fromTelY + 3.5 * MM);
+          }
+          if (state.from.tel) {
+            ctx.fillStyle = INK;
+            ctx.font = `700 ${ptToPx(11.5)}px "Courier New", "BIZ UDPGothic", monospace`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(state.from.tel, toPadX + toInnerW - 39 * MM, fromTelY + 3.5 * MM);
+          }
+
+          // --- CONTENTS ROW ---
+          const contTopY = tableY + toH + fromH;
+          const contPadX = centerColX + 3.2 * MM;
+          const contInnerW = tableW - 6.4 * MM;
+          if (!isTextOnly) {
+            ctx.fillStyle = INK;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.font = `900 ${ptToPx(9.5)}px ${fontStack}`;
+            ctx.fillText("品名：", contPadX, contTopY + 2 * MM);
+            ctx.font = `700 ${ptToPx(5.8)}px "Arial", sans-serif`;
+            ctx.fillText("Description", contPadX + 11 * MM, contTopY + 1.8 * MM);
+            ctx.fillText("of contents", contPadX + 11 * MM, contTopY + 4.2 * MM);
+
+            ctx.font = `700 ${ptToPx(5.2)}px ${fontStack}`;
+            ctx.fillText("品名の記載が無い場合または航空機による輸送ができないものについては、配達が遅れる場合があります。", contPadX + 27 * MM, contTopY + 2 * MM);
+            ctx.font = `600 ${ptToPx(4.8)}px "Arial", sans-serif`;
+            ctx.fillText("Without a description of contents or if air transport is not possible, delivery may be delayed.", contPadX + 27 * MM, contTopY + 4.6 * MM);
+
+            drawDottedHLine(contPadX, contPadX + contInnerW, contTopY + 17.5 * MM);
+
+            // Fraud warning & hazard checkboxes
+            ctx.fillStyle = RED;
+            ctx.font = `800 ${ptToPx(5.2)}px ${fontStack}`;
+            ctx.fillText("現金を送ることはできません。「レターパックで現金送れ」はすべて詐欺です。", contPadX, contTopY + 19.5 * MM);
+            ctx.fillText("最寄りの警察（電話番号は＃9110）にご相談ください。", contPadX, contTopY + 22.3 * MM);
+            ctx.font = `600 ${ptToPx(4.5)}px "Arial", sans-serif`;
+            ctx.fillText("Cannot be used to send cash. Please be careful about fraud.", contPadX, contTopY + 25.1 * MM);
+
+            const chkItems = [
+              ["リチウム電池なし", state.hazardChecks && state.hazardChecks.noLithium],
+              ["高圧ガスなし", state.hazardChecks && state.hazardChecks.noGas],
+              ["引火性液体なし", state.hazardChecks && state.hazardChecks.noFlammable]
+            ];
+            let hx = contPadX + contInnerW - 66 * MM;
+            const hy = contTopY + 23.5 * MM;
+            chkItems.forEach(([label, checked]) => {
+              ctx.strokeStyle = RED;
+              ctx.lineWidth = 0.3 * MM;
+              ctx.strokeRect(hx, hy, 2.8 * MM, 2.8 * MM);
+              if (checked) {
+                ctx.fillStyle = RED;
+                ctx.font = `900 ${ptToPx(6.5)}px sans-serif`;
+                ctx.fillText("✓", hx + 0.3 * MM, hy - 0.2 * MM);
+              }
+              ctx.fillStyle = RED;
+              ctx.font = `800 ${ptToPx(5.5)}px ${fontStack}`;
+              ctx.fillText(label, hx + 3.4 * MM, hy + 0.2 * MM);
+              hx += 22.5 * MM;
+            });
+          }
+
+          if (state.contents) {
+            const contPt = Number(settings.contentsSize) || 12.5;
+            ctx.fillStyle = INK;
+            ctx.font = `800 ${ptToPx(contPt)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(state.contents, contPadX + 2 * MM, contTopY + 13 * MM);
+          }
+
+          // Lower decorative sections in Full-Design Mode
+          if (isFull) {
+            const bottomY = tableY + tableH + 4 * MM;
+            ctx.fillStyle = GRAY_BOX;
+            ctx.fillRect(centerColX, bottomY, tableW, 38 * MM);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(centerColX + 3 * MM, bottomY + 3 * MM, 84 * MM, 14 * MM);
+            ctx.fillStyle = INK;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.font = `800 ${ptToPx(5.2)}px ${fontStack}`;
+            ctx.fillText("郵便局用バーコード", centerColX + 5 * MM, bottomY + 5 * MM);
+            ctx.font = `800 ${ptToPx(8)}px "Courier New", monospace`;
+            ctx.fillText(String(state.trackingNumber || "9999-9999-9999"), centerColX + 36 * MM, bottomY + 9 * MM);
+
+            ctx.fillStyle = RED;
+            ctx.font = `900 ${ptToPx(22)}px "Arial Black", sans-serif`;
+            ctx.fillText("3", centerColX + 5 * MM, bottomY + 19 * MM);
+            ctx.font = `900 ${ptToPx(11)}px ${fontStack}`;
+            ctx.fillText("厚さ cmまで", centerColX + 14 * MM, bottomY + 23 * MM);
+
+            ctx.fillStyle = INK;
+            ctx.font = `900 ${ptToPx(22)}px "Arial Black", sans-serif`;
+            ctx.fillText("4", centerColX + 68 * MM, bottomY + 19 * MM);
+            ctx.font = `900 ${ptToPx(11)}px ${fontStack}`;
+            ctx.fillText("重さ kgまで", centerColX + 77 * MM, bottomY + 23 * MM);
+
+            ctx.fillStyle = BLUE;
+            ctx.font = `800 ${ptToPx(5.2)}px ${fontStack}`;
+            ctx.fillText("内容品をレターパックライト封筒に封入した状態で、厚さ3cmまたは重さ4kgを超えるものは、お引受けできません。", centerColX + 5 * MM, bottomY + 32 * MM);
+
+            // Bottom title bar
+            const titleBarY = bottomY + 42 * MM;
+            ctx.fillStyle = INK;
+            ctx.font = `800 ${ptToPx(7.5)}px ${fontStack}`;
+            ctx.textAlign = "left";
+            ctx.fillText("特定封筒", centerColX + 1 * MM, titleBarY + 2 * MM);
+            ctx.fillStyle = BLUE;
+            ctx.font = `italic 900 ${ptToPx(13.5)}px ${fontStack}`;
+            ctx.textAlign = "right";
+            ctx.fillText("LETTER PACK LIGHT  レターパックライト", centerColX + tableW - 1 * MM, titleBarY);
+          }
+
+          ctx.restore();
+          return canvas;
+        }
+
+        function preparePwaPrintAssets() {
+          const statusEl = document.getElementById("pwa-render-status");
+          const imgEl = document.getElementById("pwa-render-img");
+          if (statusEl) {
+            statusEl.style.display = "block";
+            statusEl.textContent = "⏳ A4原寸（210mm×297mm）の印刷用PDFを生成しています...";
+          }
+          if (imgEl) imgEl.style.display = "none";
+
+          try {
+            const canvas = renderA4SheetToCanvas();
+            const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+            preparedPwaPngDataUrl = jpegDataUrl;
+            const pdfBlob = buildSinglePagePdfFromJpegDataUrl(jpegDataUrl, canvas.width, canvas.height);
+            const state = getAppStateAsJson();
+            const toName = (state.to.name || state.to.subname || "宛名ラベル").replace(/[\\/:*?"<>|\s]+/g, "_");
+            const fileName = `letapaX_${toName}.pdf`;
+            preparedPwaPdfFile = new File([pdfBlob], fileName, { type: "application/pdf", lastModified: Date.now() });
+
+            if (imgEl) {
+              imgEl.src = jpegDataUrl;
+              imgEl.style.display = "block";
+            }
+            if (statusEl) statusEl.style.display = "none";
+          } catch (err) {
+            if (statusEl) {
+              statusEl.textContent = "プレビュー生成に失敗しました。下の「Safariで開いて印刷」をお試しください。";
+            }
+          }
+        }
+
         function openPwaPrintFallbackModal() {
           const backdrop = document.getElementById("pwa-print-modal-backdrop");
           const openLink = document.getElementById("btn-pwa-open-safari-print");
           const handoffUrl = buildSafariHandoffPrintUrl();
           if (openLink) openLink.href = handoffUrl;
           if (backdrop) backdrop.classList.add("open");
+          preparePwaPrintAssets();
         }
 
         function handlePrintAction() {
@@ -2661,7 +3333,7 @@
               if (!printEventTriggered) {
                 openPwaPrintFallbackModal();
               }
-            }, 450);
+            }, 350);
           } else {
             setTimeout(() => {
               window.removeEventListener("beforeprint", onBeforePrint);
@@ -2674,7 +3346,9 @@
 
         const pwaModalBackdrop = document.getElementById("pwa-print-modal-backdrop");
         const pwaCloseBtn = document.getElementById("btn-pwa-close-modal");
-        const pwaCopyUrlBtn = document.getElementById("btn-pwa-copy-print-url");
+        const pwaNativeShareBtn = document.getElementById("btn-pwa-native-share-pdf");
+        const pwaDownloadPdfBtn = document.getElementById("btn-pwa-download-pdf");
+
         if (pwaCloseBtn && pwaModalBackdrop) {
           pwaCloseBtn.addEventListener("click", () => pwaModalBackdrop.classList.remove("open"));
         }
@@ -2683,15 +3357,43 @@
             if (e.target === pwaModalBackdrop) pwaModalBackdrop.classList.remove("open");
           });
         }
-        if (pwaCopyUrlBtn) {
-          pwaCopyUrlBtn.addEventListener("click", async () => {
-            const url = buildSafariHandoffPrintUrl();
-            try {
-              await navigator.clipboard.writeText(url);
-              showToast("印刷用URLをコピーしました。Safariのアドレスバーに貼り付けて開くとすぐ印刷できます");
-            } catch (_) {
-              showToast("URLのコピーに失敗しました。「Safariで開いて印刷する」ボタンを押してください");
+
+        if (pwaNativeShareBtn) {
+          pwaNativeShareBtn.addEventListener("click", async () => {
+            if (!preparedPwaPdfFile) {
+              preparePwaPrintAssets();
             }
+            if (preparedPwaPdfFile && navigator.share && (!navigator.canShare || navigator.canShare({ files: [preparedPwaPdfFile] }))) {
+              try {
+                await navigator.share({
+                  files: [preparedPwaPdfFile],
+                  title: "レターパックライト 宛名ラベル (A4原寸)"
+                });
+                return;
+              } catch (err) {
+                if (err && err.name === "AbortError") return;
+              }
+            }
+            // Fallback to direct download if Web Share with files is unavailable
+            if (pwaDownloadPdfBtn) pwaDownloadPdfBtn.click();
+          });
+        }
+
+        if (pwaDownloadPdfBtn) {
+          pwaDownloadPdfBtn.addEventListener("click", () => {
+            if (!preparedPwaPdfFile) {
+              preparePwaPrintAssets();
+            }
+            if (!preparedPwaPdfFile) return;
+            const url = URL.createObjectURL(preparedPwaPdfFile);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = preparedPwaPdfFile.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+            showToast(`A4原寸PDF（${preparedPwaPdfFile.name}）を保存しました`);
           });
         }
 
