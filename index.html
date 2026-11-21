@@ -34,11 +34,11 @@
       --offset-x: 0mm;
       --offset-y: 0mm;
       --print-scale: 1;
-      --to-addr-size: 14.5pt;
-      --to-name-size: 18.5pt;
-      --from-addr-size: 10pt;
-      --from-name-size: 12pt;
-      --contents-size: 11.5pt;
+      --to-addr-size: 15.5pt;
+      --to-name-size: 20pt;
+      --from-addr-size: 11pt;
+      --from-name-size: 13.5pt;
+      --contents-size: 12.5pt;
       --label-font: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "BIZ UDPGothic", "Meiryo", "Noto Sans JP", sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; }
@@ -115,36 +115,36 @@
     .a4-sheet {
       width: 210mm; min-height: 297mm; background: #ffffff;
       box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08);
-      position: relative; padding: 6mm 10mm;
+      position: relative; padding: 2.5mm 3mm;
       display: flex; flex-direction: column; align-items: center;
       font-family: var(--label-font); color: var(--lp-ink);
     }
     .lp-envelope {
-      width: 190mm; min-height: 282mm; background: #ffffff; position: relative;
+      width: 204mm; min-height: 292mm; background: #ffffff; position: relative;
       transform: translate(var(--offset-x), var(--offset-y)) scale(var(--print-scale));
       transform-origin: top center; border: 1px solid #cbd5e1;
       display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;
     }
     .lp-blue-ribbon {
-      background: var(--lp-blue); color: #ffffff; height: 7.2mm;
+      background: var(--lp-blue); color: #ffffff; height: 6.5mm;
       display: flex; align-items: center; justify-content: space-around; padding: 0 3mm;
       font-size: 7.5pt; font-weight: 900; letter-spacing: 0.04em; font-style: italic; user-select: none;
     }
-    .lp-envelope-body { flex: 1; padding: 3.5mm 6.5mm 2.5mm 6.5mm; display: flex; flex-direction: column; justify-content: space-between; }
-    .lp-top-zip-row { display: flex; align-items: center; justify-content: flex-end; gap: 3mm; margin-top: 1.2mm; margin-bottom: 10.5mm; padding-right: 0.5mm; }
-    .top-zip-boxes { display: flex; align-items: center; gap: 1.4mm; }
+    .lp-envelope-body { flex: 1; padding: 2.5mm 3mm 2mm 3mm; display: flex; flex-direction: column; justify-content: space-between; }
+    .lp-top-zip-row { display: flex; align-items: center; justify-content: flex-end; gap: 3mm; margin-top: 0.8mm; margin-bottom: 17.5mm; padding-right: 0; }
+    .top-zip-boxes { display: flex; align-items: center; gap: 1.95mm; }
     .top-zip-box {
-      width: 8.6mm; height: 11.5mm; border: 1.5px solid var(--lp-red); background: #ffffff;
+      width: 10.0mm; height: 13.4mm; border: 0.55mm solid var(--lp-red); background: #ffffff;
       text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace;
-      font-size: 18pt; font-weight: 800; color: var(--lp-ink); padding: 0; outline: none;
+      font-size: 20pt; font-weight: 800; color: var(--lp-ink); padding: 0; outline: none;
     }
-    .top-zip-box.first-3 { border-width: 2.1px; }
+    .top-zip-box.first-3 { border-width: 0.75mm; }
     .top-zip-box:focus { background: #fffbeb; box-shadow: 0 0 0 2px rgba(215, 38, 43, 0.25); }
-    .top-zip-hyphen { width: 2.6mm; height: 1.8px; background: var(--lp-red); margin: 0 0.2mm; }
-    .lp-two-col-grid { display: grid; grid-template-columns: 37mm 1fr 3.5mm; gap: 2.5mm; align-items: start; margin-top: 0; }
-    .lp-left-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding-top: 23.2mm; }
+    .top-zip-hyphen { width: 2.2mm; height: 0.65mm; background: var(--lp-red); margin: 0 -0.45mm; }
+    .lp-two-col-grid { display: grid; grid-template-columns: 32mm 158.2mm 3.5mm; gap: 2mm; align-items: start; justify-content: center; margin-top: 0; }
+    .lp-left-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding-top: 31.7mm; }
     .lp-stamp-430 {
-      width: 31mm; background: var(--lp-blue); color: #ffffff; padding: 2mm 2.2mm 1.6mm;
+      width: 30mm; background: var(--lp-blue); color: #ffffff; padding: 2mm 2mm 1.6mm;
       display: flex; flex-direction: column; align-items: center; position: relative; user-select: none; border: 1px solid var(--lp-blue);
     }
     .stamp-line-1 { font-size: 8.2pt; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; width: 100%; text-align: center; font-style: italic; }
@@ -152,23 +152,23 @@
     .stamp-line-price { font-size: 24pt; font-weight: 900; line-height: 1; letter-spacing: -0.02em; margin: 0.6mm 0 1mm; font-family: "Arial Black", "Helvetica Neue", sans-serif; }
     .stamp-bottom-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 5.5pt; font-weight: 800; border-top: 0.8px solid rgba(255,255,255,0.5); padding-top: 0.6mm; }
     .stamp-cancel-lines { position: absolute; bottom: -1.5mm; right: 1mm; width: 9mm; height: 9mm; pointer-events: none; }
-    .fold-dotted-notice { margin-top: 56mm; width: 100%; text-align: center; font-size: 4.8pt; color: #64748b; line-height: 1.3; border-bottom: 1px dotted #94a3b8; padding-bottom: 1mm; }
-    .lp-center-col { display: flex; flex-direction: column; width: 100%; }
-    .lp-address-table-outer { position: relative; border: 1.6px solid #111827; background: #ffffff; }
-    .lp-row-to { display: grid; grid-template-columns: 23mm 1fr; border-bottom: 1.4px solid #111827; min-height: 55mm; }
+    .fold-dotted-notice { margin-top: 66mm; width: 100%; text-align: center; font-size: 4.8pt; color: #64748b; line-height: 1.3; border-bottom: 1px dotted #94a3b8; padding-bottom: 1mm; }
+    .lp-center-col { display: flex; flex-direction: column; width: 158.2mm; }
+    .lp-address-table-outer { position: relative; width: 158.2mm; border: 0.5mm solid #111827; background: #ffffff; }
+    .lp-row-to { display: grid; grid-template-columns: 32.3mm 1fr; border-bottom: 0.45mm solid #111827; min-height: 68.6mm; }
     .lp-sidebar-to {
-      background: var(--lp-blue-mid); color: #ffffff; border-right: 1.2px solid #111827;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 5.5mm; position: relative; user-select: none;
+      background: var(--lp-blue-mid); color: #ffffff; border-right: 0.4mm solid #111827;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 6.5mm; position: relative; user-select: none;
     }
-    .sidebar-jp-label { font-size: 7.5pt; font-weight: 900; letter-spacing: 0.05em; }
-    .sidebar-en-label { font-size: 16pt; font-weight: 900; line-height: 1.05; font-family: "Arial", "Helvetica", sans-serif; }
-    .to-up-arrow-svg { width: 14mm; height: 22mm; margin-top: auto; margin-bottom: -0.5mm; display: block; }
-    .lp-fields-to { padding: 1.8mm 3mm 1.5mm; display: flex; flex-direction: column; justify-content: space-between; }
+    .sidebar-jp-label { font-size: 8.5pt; font-weight: 900; letter-spacing: 0.05em; }
+    .sidebar-en-label { font-size: 20pt; font-weight: 900; line-height: 1.05; font-family: "Arial", "Helvetica", sans-serif; margin-top: 0.8mm; }
+    .to-up-arrow-svg { width: 16mm; height: 28mm; margin-top: auto; margin-bottom: -0.5mm; display: block; }
+    .lp-fields-to { padding: 2mm 3.2mm 1.8mm; display: flex; flex-direction: column; justify-content: space-between; }
     .field-head-bar { display: flex; align-items: flex-start; justify-content: space-between; }
     .bilingual-label { display: flex; flex-direction: column; line-height: 1.15; color: #111827; user-select: none; }
-    .bilingual-label .lbl-jp { font-size: 6.5pt; font-weight: 800; }
-    .bilingual-label .lbl-en { font-size: 5.8pt; font-weight: 700; font-family: "Arial", sans-serif; }
-    .address-lines-wrap { position: relative; margin: 0.5mm 0 1mm; }
+    .bilingual-label .lbl-jp { font-size: 7pt; font-weight: 800; }
+    .bilingual-label .lbl-en { font-size: 6pt; font-weight: 700; font-family: "Arial", sans-serif; }
+    .address-lines-wrap { position: relative; margin: 0.8mm 0 1.2mm; }
     .canvas-editable {
       width: 100%; border: none; background: transparent; color: var(--lp-ink);
       font-family: var(--label-font); outline: none; resize: none; padding: 0.3mm 1mm; border-radius: 2px;
@@ -177,67 +177,67 @@
     .canvas-editable:focus { background: #fffef0; box-shadow: inset 0 0 0 1.4px var(--lp-blue); }
     .canvas-editable::placeholder { color: #94a3b8; font-weight: 400; opacity: 0.7; }
     .to-address-textarea {
-      font-size: var(--to-addr-size); font-weight: 700; line-height: 9mm; height: 18.5mm;
+      font-size: var(--to-addr-size); font-weight: 700; line-height: 14.5mm; height: 29.5mm;
       background-image: linear-gradient(to right, #94a3b8 40%, transparent 0%), linear-gradient(to right, #94a3b8 40%, transparent 0%);
-      background-position: 0 8.8mm, 0 17.8mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
+      background-position: 0 14.2mm, 0 28.8mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
     }
-    .name-block-wrap { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 2mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 0.8mm; min-height: 16mm; }
-    .name-inputs-stack { display: flex; flex-direction: column; gap: 0.4mm; }
-    .subname-input { font-size: calc(var(--to-name-size) * 0.56); font-weight: 600; height: 5.5mm; }
-    .mainname-input { font-size: var(--to-name-size); font-weight: 800; line-height: 1.2; min-height: 9.5mm; }
+    .name-block-wrap { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 2.5mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 1mm; min-height: 18.5mm; }
+    .name-inputs-stack { display: flex; flex-direction: column; gap: 0.6mm; }
+    .subname-input { font-size: calc(var(--to-name-size) * 0.56); font-weight: 600; height: 6.5mm; }
+    .mainname-input { font-size: var(--to-name-size); font-weight: 800; line-height: 1.2; min-height: 10.5mm; }
     .sama-select {
       appearance: none; -webkit-appearance: none; border: 1px dashed transparent; background: transparent;
-      font-family: var(--label-font); font-size: 13.5pt; font-weight: 800; color: #111827; padding: 0.2mm 1mm; cursor: pointer; text-align: right;
+      font-family: var(--label-font); font-size: 15pt; font-weight: 800; color: #111827; padding: 0.2mm 1mm; cursor: pointer; text-align: right;
     }
-    .tel-line-row { display: flex; align-items: center; justify-content: space-between; padding-top: 0.8mm; }
-    .tel-brackets-wrap { display: flex; align-items: center; gap: 1.5mm; font-size: 11pt; color: #111827; margin-right: 12mm; }
-    .tel-input-field { width: 46mm; text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 10.5pt; font-weight: 700; }
-    .lp-row-from { display: grid; grid-template-columns: 23mm 1fr; border-bottom: 1.4px solid #111827; min-height: 40mm; }
+    .tel-line-row { display: flex; align-items: center; justify-content: space-between; padding-top: 1mm; min-height: 8.5mm; }
+    .tel-brackets-wrap { display: flex; align-items: center; gap: 1.5mm; font-size: 11.5pt; color: #111827; margin-right: 12mm; }
+    .tel-input-field { width: 54mm; text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 11.5pt; font-weight: 700; }
+    .lp-row-from { display: grid; grid-template-columns: 32.3mm 1fr; border-bottom: 0.45mm solid #111827; min-height: 53.0mm; }
     .lp-sidebar-from {
-      background: var(--lp-blue-pale); color: #111827; border-right: 1.2px solid #111827;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 1.5mm; user-select: none;
+      background: var(--lp-blue-pale); color: #111827; border-right: 0.4mm solid #111827;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2mm; user-select: none;
     }
-    .from-arrow-tail { display: flex; flex-direction: column; gap: 1.1mm; margin-bottom: 2.5mm; }
-    .tail-sq { width: 3.4mm; height: 1.5mm; background: var(--lp-blue); }
-    .lp-fields-from { padding: 1.4mm 3mm 1.2mm; display: flex; flex-direction: column; justify-content: space-between; }
+    .from-arrow-tail { display: flex; flex-direction: column; gap: 1.4mm; margin-bottom: 3.5mm; }
+    .tail-sq { width: 4.2mm; height: 1.8mm; background: var(--lp-blue); }
+    .lp-fields-from { padding: 1.8mm 3.2mm 1.5mm; display: flex; flex-direction: column; justify-content: space-between; }
     .from-top-bar { display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
-    .from-addr-zip-group { display: flex; align-items: center; gap: 3mm; }
-    .from-zip-boxes { display: flex; align-items: center; gap: 0.7mm; }
+    .from-addr-zip-group { display: flex; align-items: center; gap: 3.5mm; }
+    .from-zip-boxes { display: flex; align-items: center; gap: 0.9mm; }
     .from-zip-box {
-      width: 4.5mm; height: 6.2mm; border: 1px solid #94a3b8; background: #ffffff;
+      width: 4.5mm; height: 6.1mm; border: 0.3mm solid #94a3b8; background: #ffffff;
       text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 10.5pt; font-weight: 700; color: var(--lp-ink); padding: 0; outline: none;
     }
-    .from-zip-hyphen { width: 1.6mm; height: 1px; background: #94a3b8; }
+    .from-zip-hyphen { width: 1.4mm; height: 0.35mm; background: #94a3b8; }
     .from-address-textarea {
-      font-size: var(--from-addr-size); font-weight: 600; line-height: 6.4mm; height: 13mm;
+      font-size: var(--from-addr-size); font-weight: 600; line-height: 8.8mm; height: 18mm;
       background-image: linear-gradient(to right, #94a3b8 40%, transparent 0%), linear-gradient(to right, #94a3b8 40%, transparent 0%);
-      background-position: 0 6.2mm, 0 12.6mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
+      background-position: 0 8.5mm, 0 17.3mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
     }
-    .from-name-block { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 2mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 0.5mm; min-height: 9.5mm; }
+    .from-name-block { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 2.5mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 0.8mm; min-height: 12.5mm; }
     .from-name-input { font-size: var(--from-name-size); font-weight: 700; }
-    .lp-row-contents { padding: 1.5mm 2.8mm 1.5mm; display: flex; flex-direction: column; justify-content: space-between; min-height: 22mm; }
-    .contents-top-line { display: flex; align-items: flex-start; gap: 2mm; }
-    .contents-bilingual { display: flex; align-items: baseline; gap: 1mm; white-space: nowrap; user-select: none; }
-    .contents-bilingual .cb-jp { font-size: 8.5pt; font-weight: 900; }
-    .contents-bilingual .cb-en { font-size: 6pt; font-weight: 700; line-height: 1.05; display: inline-block; }
-    .contents-note-text { font-size: 5pt; line-height: 1.25; color: #111827; user-select: none; }
-    .contents-main-input-row { display: flex; align-items: center; gap: 2mm; margin: 0.6mm 0; }
-    .contents-input-field { font-size: var(--contents-size); font-weight: 800; height: 7.5mm; border-bottom: 1px dotted #94a3b8; }
-    .contents-bottom-warn-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5mm; margin-top: 0.5mm; }
-    .fraud-red-warning { color: var(--lp-red); font-size: 5.2pt; font-weight: 800; line-height: 1.28; user-select: none; }
-    .hazard-checkboxes { display: flex; align-items: center; gap: 1.8mm; color: var(--lp-red); font-size: 5.4pt; font-weight: 800; white-space: nowrap; }
-    .hazard-chk-label { display: inline-flex; align-items: center; gap: 0.5mm; cursor: pointer; }
-    .hazard-chk-label input { width: 2.8mm; height: 2.8mm; margin: 0; accent-color: var(--lp-red); }
-    .lp-right-edge-notes { writing-mode: vertical-rl; font-size: 4.5pt; color: #475569; line-height: 1.25; letter-spacing: 0.02em; display: flex; justify-content: space-between; height: 118mm; margin-top: 23.2mm; user-select: none; }
+    .lp-row-contents { padding: 1.8mm 3.2mm 1.8mm; display: flex; flex-direction: column; justify-content: space-between; min-height: 29.3mm; }
+    .contents-top-line { display: flex; align-items: flex-start; gap: 2.5mm; }
+    .contents-bilingual { display: flex; align-items: baseline; gap: 1.2mm; white-space: nowrap; user-select: none; }
+    .contents-bilingual .cb-jp { font-size: 9.5pt; font-weight: 900; }
+    .contents-bilingual .cb-en { font-size: 6.2pt; font-weight: 700; line-height: 1.05; display: inline-block; }
+    .contents-note-text { font-size: 5.4pt; line-height: 1.25; color: #111827; user-select: none; }
+    .contents-main-input-row { display: flex; align-items: center; gap: 2mm; margin: 1mm 0; }
+    .contents-input-field { font-size: var(--contents-size); font-weight: 800; height: 8.5mm; border-bottom: 1px dotted #94a3b8; }
+    .contents-bottom-warn-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 2mm; margin-top: 0.8mm; }
+    .fraud-red-warning { color: var(--lp-red); font-size: 5.5pt; font-weight: 800; line-height: 1.28; user-select: none; }
+    .hazard-checkboxes { display: flex; align-items: center; gap: 2mm; color: var(--lp-red); font-size: 5.8pt; font-weight: 800; white-space: nowrap; }
+    .hazard-chk-label { display: inline-flex; align-items: center; gap: 0.6mm; cursor: pointer; }
+    .hazard-chk-label input { width: 3mm; height: 3mm; margin: 0; accent-color: var(--lp-red); }
+    .lp-right-edge-notes { writing-mode: vertical-rl; font-size: 4.5pt; color: #475569; line-height: 1.25; letter-spacing: 0.02em; display: flex; justify-content: space-between; height: 150.9mm; margin-top: 31.7mm; user-select: none; }
     .lp-unified-cutout-unit {
       position: relative;
       display: flex;
       flex-direction: column;
-      width: 100%;
+      width: 158.2mm;
     }
-    .lp-howto-row { margin-top: 2mm; display: grid; grid-template-columns: 6mm repeat(5, 1fr); gap: 1.5mm; align-items: stretch; user-select: none; }
+    .lp-howto-row { margin-top: 1.5mm; display: grid; grid-template-columns: 6mm repeat(5, 1fr); gap: 1.4mm; align-items: stretch; user-select: none; }
     .howto-vertical-pill { background: var(--lp-blue); color: #ffffff; border-radius: 1.5mm; writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; font-size: 6.5pt; font-weight: 900; letter-spacing: 0.12em; padding: 1mm 0; }
-    .howto-step-card { border: 1.3px solid var(--lp-blue); border-radius: 1.8mm; padding: 1mm 1.2mm; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; min-height: 18.5mm; }
+    .howto-step-card { border: 1.3px solid var(--lp-blue); border-radius: 1.8mm; padding: 0.8mm 1.2mm; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; min-height: 16.5mm; }
     .howto-step-card.filled-blue { background: var(--lp-blue); color: #ffffff; }
     .step-head { display: flex; align-items: baseline; gap: 1mm; line-height: 1.1; }
     .step-num { font-size: 9.5pt; font-weight: 900; color: var(--lp-blue); font-family: "Arial Black", sans-serif; }
@@ -246,47 +246,47 @@
     .step-icon-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0.5mm 0; }
     .step-foot { font-size: 5pt; font-weight: 800; text-align: center; color: var(--lp-blue); }
     .howto-step-card.filled-blue .step-foot { color: #ffffff; }
-    .lp-peel-section { margin-top: 2mm; display: grid; grid-template-columns: 1.15fr 1fr; gap: 2mm; align-items: stretch; }
+    .lp-peel-section { margin-top: 1.4mm; display: grid; grid-template-columns: 1.15fr 1fr; gap: 2mm; align-items: stretch; }
     .peel-left-col { display: flex; flex-direction: column; }
-    .peel-top-caption { text-align: center; font-size: 8.5pt; font-weight: 900; color: var(--lp-blue); letter-spacing: 0.1em; margin-bottom: 0.8mm; user-select: none; }
-    .peel-sticker-box { border: 1.6px solid #0284c7; border-radius: 2.5mm; background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 45%, #ffffff 45%); padding: 1.2mm 2mm; display: grid; grid-template-columns: 6mm 1fr; gap: 1.5mm; align-items: center; }
+    .peel-top-caption { text-align: center; font-size: 8pt; font-weight: 900; color: var(--lp-blue); letter-spacing: 0.1em; margin-bottom: 0.5mm; user-select: none; }
+    .peel-sticker-box { border: 1.6px solid #0284c7; border-radius: 2.5mm; background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 45%, #ffffff 45%); padding: 1mm 1.8mm; display: grid; grid-template-columns: 6mm 1fr; gap: 1.5mm; align-items: center; }
     .peel-tab-text { writing-mode: vertical-rl; color: #ffffff; font-size: 6.5pt; font-weight: 900; letter-spacing: 0.1em; text-align: center; user-select: none; }
-    .peel-sticker-inner { background: #ffffff; border-radius: 1.5mm; padding: 1.2mm 2mm; display: flex; flex-direction: column; gap: 0.8mm; }
+    .peel-sticker-inner { background: #ffffff; border-radius: 1.5mm; padding: 1mm 1.8mm; display: flex; flex-direction: column; gap: 0.6mm; }
     .peel-qr-and-num { display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
-    .qr-placeholder-svg { width: 9mm; height: 9mm; flex-shrink: 0; }
+    .qr-placeholder-svg { width: 8.5mm; height: 8.5mm; flex-shrink: 0; }
     .peel-tracking-info { flex: 1; display: flex; flex-direction: column; align-items: flex-end; }
     .peel-lp-tag { font-size: 5.5pt; font-weight: 800; color: #0284c7; align-self: flex-start; }
     .tracking-input-clean { width: 38mm; border: none; background: transparent; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 9.5pt; font-weight: 800; text-align: right; color: #111827; outline: none; }
-    .peel-right-retain-box { background: var(--lp-blue); color: #ffffff; border-radius: 2mm; padding: 2mm 2.8mm; display: flex; flex-direction: column; justify-content: space-between; user-select: none; }
-    .retain-title-jp { font-size: 9pt; font-weight: 900; letter-spacing: 0.03em; }
-    .retain-title-en { font-size: 6pt; font-weight: 700; opacity: 0.95; }
-    .retain-contact-details { font-size: 5pt; line-height: 1.32; margin-top: 1mm; }
-    .lp-bottom-gray-card { margin-top: 2mm; background: var(--lp-gray-box); border-radius: 2.5mm; padding: 2.2mm 3.5mm; display: flex; flex-direction: column; gap: 1.5mm; }
+    .peel-right-retain-box { background: var(--lp-blue); color: #ffffff; border-radius: 2mm; padding: 1.5mm 2.5mm; display: flex; flex-direction: column; justify-content: space-between; user-select: none; }
+    .retain-title-jp { font-size: 8.5pt; font-weight: 900; letter-spacing: 0.03em; }
+    .retain-title-en { font-size: 5.8pt; font-weight: 700; opacity: 0.95; }
+    .retain-contact-details { font-size: 4.8pt; line-height: 1.28; margin-top: 0.8mm; }
+    .lp-bottom-gray-card { margin-top: 1.4mm; background: var(--lp-gray-box); border-radius: 2.5mm; padding: 1.6mm 3mm; display: flex; flex-direction: column; gap: 1.1mm; }
     .gray-card-top-row { display: grid; grid-template-columns: 1.15fr 1fr; gap: 3mm; align-items: center; }
-    .post-barcode-pill { background: #ffffff; border-radius: 2mm; padding: 1.2mm 2.5mm; display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
-    .pb-label { font-size: 5.2pt; font-weight: 800; color: #111827; line-height: 1.2; text-align: center; white-space: nowrap; }
+    .post-barcode-pill { background: #ffffff; border-radius: 2mm; padding: 1mm 2.2mm; display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
+    .pb-label { font-size: 5pt; font-weight: 800; color: #111827; line-height: 1.2; text-align: center; white-space: nowrap; }
     .pb-barcode-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
-    .barcode-svg { width: 100%; height: 7mm; display: block; }
-    .pb-num-display { font-family: "Courier New", monospace; font-size: 7.8pt; font-weight: 800; letter-spacing: 0.08em; }
-    .attention-oval { background: var(--lp-blue); color: #ffffff; border-radius: 999px; padding: 1mm 4mm; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: fit-content; user-select: none; }
-    .attention-oval .att-jp { font-size: 7.5pt; font-weight: 900; line-height: 1.1; }
-    .attention-oval .att-en { font-size: 5.5pt; font-weight: 700; line-height: 1; }
+    .barcode-svg { width: 100%; height: 6mm; display: block; }
+    .pb-num-display { font-family: "Courier New", monospace; font-size: 7.5pt; font-weight: 800; letter-spacing: 0.08em; }
+    .attention-oval { background: var(--lp-blue); color: #ffffff; border-radius: 999px; padding: 0.8mm 3.5mm; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: fit-content; user-select: none; }
+    .attention-oval .att-jp { font-size: 7pt; font-weight: 900; line-height: 1.1; }
+    .attention-oval .att-en { font-size: 5.2pt; font-weight: 700; line-height: 1; }
     .specs-3cm-4kg-row { display: flex; align-items: baseline; justify-content: space-between; gap: 3mm; user-select: none; }
     .spec-limit-item { display: flex; align-items: baseline; gap: 1mm; }
-    .big-red-3 { font-size: 27pt; font-weight: 900; color: var(--lp-red); line-height: 0.9; font-family: "Arial Black", sans-serif; }
-    .big-black-4 { font-size: 27pt; font-weight: 900; color: #111827; line-height: 0.9; font-family: "Arial Black", sans-serif; }
+    .big-red-3 { font-size: 24pt; font-weight: 900; color: var(--lp-red); line-height: 0.9; font-family: "Arial Black", sans-serif; }
+    .big-black-4 { font-size: 24pt; font-weight: 900; color: #111827; line-height: 0.9; font-family: "Arial Black", sans-serif; }
     .spec-limit-stack { display: flex; flex-direction: column; }
-    .spec-tag-pill { background: var(--lp-blue); color: #ffffff; font-size: 5.5pt; font-weight: 800; padding: 0.2mm 2mm; border-radius: 0.6mm; width: fit-content; margin-bottom: 0.3mm; }
+    .spec-tag-pill { background: var(--lp-blue); color: #ffffff; font-size: 5.2pt; font-weight: 800; padding: 0.2mm 2mm; border-radius: 0.6mm; width: fit-content; margin-bottom: 0.2mm; }
     .spec-unit-line { display: flex; align-items: baseline; gap: 1mm; }
-    .unit-cm-red { font-size: 11.5pt; font-weight: 900; color: var(--lp-red); }
-    .unit-kg-black { font-size: 11.5pt; font-weight: 900; color: #111827; }
-    .unit-en-sub { font-size: 5.2pt; font-weight: 800; color: var(--lp-blue); line-height: 1.1; }
-    .gray-card-foot-note { font-size: 5.5pt; font-weight: 800; color: var(--lp-blue); line-height: 1.3; user-select: none; }
-    .lp-bottom-title-bar { margin-top: 1.5mm; display: flex; align-items: baseline; justify-content: space-between; padding: 0 1mm; user-select: none; }
+    .unit-cm-red { font-size: 11pt; font-weight: 900; color: var(--lp-red); }
+    .unit-kg-black { font-size: 11pt; font-weight: 900; color: #111827; }
+    .unit-en-sub { font-size: 5pt; font-weight: 800; color: var(--lp-blue); line-height: 1.1; }
+    .gray-card-foot-note { font-size: 5.2pt; font-weight: 800; color: var(--lp-blue); line-height: 1.25; user-select: none; }
+    .lp-bottom-title-bar { margin-top: 1mm; display: flex; align-items: baseline; justify-content: space-between; padding: 0 1mm; user-select: none; }
     .tokutei-label { font-size: 7.5pt; font-weight: 800; color: #111827; }
     .bottom-brand-logo { display: flex; align-items: baseline; gap: 2mm; color: var(--lp-blue); font-style: italic; }
     .bottom-brand-logo .bbl-en { font-size: 7.5pt; font-weight: 900; letter-spacing: 0.04em; }
-    .bottom-brand-logo .bbl-jp { font-size: 14pt; font-weight: 900; letter-spacing: 0.02em; }
+    .bottom-brand-logo .bbl-jp { font-size: 13.5pt; font-weight: 900; letter-spacing: 0.02em; }
     .inline-screen-tools { display: flex; align-items: center; gap: 1.2mm; }
     .inline-tool-btn { background: #e0f2fe; color: var(--lp-blue-deep); border: 1px solid #93c5fd; border-radius: 3px; font-size: 7pt; font-weight: 700; padding: 0.7mm 1.8mm; cursor: pointer; }
     .inline-tool-btn:hover { background: var(--lp-blue); color: #ffffff; }
@@ -309,10 +309,10 @@
       display: none !important;
     }
     .cut-guide-unified {
-      top: -2.8mm;
-      right: -2.8mm;
-      bottom: -2.8mm;
-      left: -2.8mm;
+      top: -1.8mm;
+      right: -1.8mm;
+      bottom: -1.8mm;
+      left: -1.8mm;
     }
     .cut-scissor-badge {
       position: absolute;
@@ -408,7 +408,7 @@
       html, body { width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; overflow: hidden !important; }
       .app-header, .stage-toolbar, .control-sidebar, .inline-screen-tools, .toast-container, .no-print { display: none !important; }
       .workspace, .preview-stage, .sheet-scroll-container { display: block !important; width: 210mm !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
-      .a4-sheet { width: 210mm !important; height: 297mm !important; min-height: 297mm !important; margin: 0 !important; padding: 6mm 10mm !important; box-shadow: none !important; border: none !important; page-break-after: avoid !important; break-after: avoid !important; }
+      .a4-sheet { width: 210mm !important; height: 297mm !important; min-height: 297mm !important; margin: 0 !important; padding: 2.5mm 3mm !important; box-shadow: none !important; border: none !important; page-break-after: avoid !important; break-after: avoid !important; }
       .canvas-editable::placeholder, .top-zip-box::placeholder, .from-zip-box::placeholder { color: transparent !important; }
       .canvas-editable, .sama-select { background-color: transparent !important; box-shadow: none !important; border-color: transparent !important; }
     }
@@ -998,29 +998,33 @@
             </div>
           </div>
           <div class="slider-row">
-            <div class="slider-header"><span>お届け先 住所サイズ</span><span id="val-to-addr-size" class="slider-val">14.5pt</span></div>
-            <input type="range" id="slider-to-addr-size" class="range-slider" min="9" max="20" step="0.5" value="14.5" />
+            <div class="slider-header"><span>お届け先 住所サイズ</span><span id="val-to-addr-size" class="slider-val">15.5pt</span></div>
+            <input type="range" id="slider-to-addr-size" class="range-slider" min="9" max="22" step="0.5" value="15.5" />
           </div>
           <div class="slider-row">
-            <div class="slider-header"><span>お届け先 氏名サイズ</span><span id="val-to-name-size" class="slider-val">18.5pt</span></div>
-            <input type="range" id="slider-to-name-size" class="range-slider" min="11" max="26" step="0.5" value="18.5" />
+            <div class="slider-header"><span>お届け先 氏名サイズ</span><span id="val-to-name-size" class="slider-val">20pt</span></div>
+            <input type="range" id="slider-to-name-size" class="range-slider" min="11" max="28" step="0.5" value="20" />
           </div>
           <div class="slider-row">
-            <div class="slider-header"><span>ご依頼主 住所サイズ</span><span id="val-from-addr-size" class="slider-val">10pt</span></div>
-            <input type="range" id="slider-from-addr-size" class="range-slider" min="7" max="14" step="0.5" value="10" />
+            <div class="slider-header"><span>ご依頼主 住所サイズ</span><span id="val-from-addr-size" class="slider-val">11pt</span></div>
+            <input type="range" id="slider-from-addr-size" class="range-slider" min="7" max="16" step="0.5" value="11" />
           </div>
           <div class="slider-row">
-            <div class="slider-header"><span>ご依頼主 氏名サイズ</span><span id="val-from-name-size" class="slider-val">12pt</span></div>
-            <input type="range" id="slider-from-name-size" class="range-slider" min="8.5" max="17" step="0.5" value="12" />
+            <div class="slider-header"><span>ご依頼主 氏名サイズ</span><span id="val-from-name-size" class="slider-val">13.5pt</span></div>
+            <input type="range" id="slider-from-name-size" class="range-slider" min="8.5" max="18" step="0.5" value="13.5" />
           </div>
           <div class="slider-row">
-            <div class="slider-header"><span>品名サイズ</span><span id="val-contents-size" class="slider-val">11.5pt</span></div>
-            <input type="range" id="slider-contents-size" class="range-slider" min="8" max="16" step="0.5" value="11.5" />
+            <div class="slider-header"><span>品名サイズ</span><span id="val-contents-size" class="slider-val">12.5pt</span></div>
+            <input type="range" id="slider-contents-size" class="range-slider" min="8" max="18" step="0.5" value="12.5" />
           </div>
         </div>
 
         <div class="panel-section">
-          <div class="section-header"><h2 class="section-title">プリンター位置補正（オフセット調整）</h2></div>
+          <div class="section-header"><h2 class="section-title">プリンター位置補正（オフセット・実寸調整）</h2></div>
+          <div style="font-size:0.73rem; color:var(--text-secondary); background:#f8fafc; border:1px solid var(--border-color); border-radius:6px; padding:0.5rem 0.65rem; margin-bottom:0.7rem; line-height:1.45;">
+            📏 <strong>実物原寸サイズ（枠幅158.2mm × 縦150.9mm）</strong>に設定されています。<br />
+            ※印刷設定で<strong>「倍率：100%（実際のサイズ）」</strong>を選び、「用紙に合わせる」を外すと実物とぴったり同じ大きさで印刷されます。
+          </div>
           <div class="slider-row">
             <div class="slider-header"><span>左右位置オフセット (X軸)</span><span id="val-offset-x" class="slider-val">0mm</span></div>
             <input type="range" id="slider-offset-x" class="range-slider" min="-15" max="15" step="0.5" value="0" />
@@ -1031,7 +1035,7 @@
           </div>
           <div class="slider-row">
             <div class="slider-header"><span>全体スケール</span><span id="val-scale" class="slider-val">100%</span></div>
-            <input type="range" id="slider-scale" class="range-slider" min="90" max="108" step="1" value="100" />
+            <input type="range" id="slider-scale" class="range-slider" min="85" max="120" step="1" value="100" />
           </div>
         </div>
       </div>
@@ -1576,13 +1580,13 @@
         const toAddr = document.getElementById("canvas-to-address");
         if (toAddr) {
           const len = toAddr.value.length;
-          const pt = len > 55 ? 10.5 : len > 42 ? 12 : len > 30 ? 13.5 : 14.5;
+          const pt = len > 58 ? 11.5 : len > 44 ? 13 : len > 32 ? 14.5 : 15.5;
           document.documentElement.style.setProperty("--to-addr-size", pt + "pt");
         }
         const toName = document.getElementById("canvas-to-name");
         if (toName) {
           const len = toName.value.length;
-          const pt = len > 22 ? 13 : len > 16 ? 15 : len > 11 ? 17 : 18.5;
+          const pt = len > 22 ? 14 : len > 16 ? 16.5 : len > 11 ? 18.5 : 20;
           document.documentElement.style.setProperty("--to-name-size", pt + "pt");
         }
       }
@@ -1933,11 +1937,11 @@
             autoFitFont: Boolean((document.getElementById("auto-fit-font-toggle") || {}).checked),
             fontFamily: (document.getElementById("select-font-family") || {}).value || "gothic",
             stampPrice: (document.getElementById("select-stamp-price") || {}).value || "430",
-            toAddrSize: Number((document.getElementById("slider-to-addr-size") || {}).value || 14.5),
-            toNameSize: Number((document.getElementById("slider-to-name-size") || {}).value || 18.5),
-            fromAddrSize: Number((document.getElementById("slider-from-addr-size") || {}).value || 10),
-            fromNameSize: Number((document.getElementById("slider-from-name-size") || {}).value || 12),
-            contentsSize: Number((document.getElementById("slider-contents-size") || {}).value || 11.5),
+            toAddrSize: Number((document.getElementById("slider-to-addr-size") || {}).value || 15.5),
+            toNameSize: Number((document.getElementById("slider-to-name-size") || {}).value || 20),
+            fromAddrSize: Number((document.getElementById("slider-from-addr-size") || {}).value || 11),
+            fromNameSize: Number((document.getElementById("slider-from-name-size") || {}).value || 13.5),
+            contentsSize: Number((document.getElementById("slider-contents-size") || {}).value || 12.5),
             offsetX: Number((document.getElementById("slider-offset-x") || {}).value || 0),
             offsetY: Number((document.getElementById("slider-offset-y") || {}).value || 0),
             scale: Number((document.getElementById("slider-scale") || {}).value || 100)
@@ -2380,7 +2384,7 @@
           resetCalibBtn.addEventListener("click", () => {
             applySettingsState({
               autoFitFont: true, fontFamily: "gothic", stampPrice: "430",
-              toAddrSize: 14.5, toNameSize: 18.5, fromAddrSize: 10, fromNameSize: 12, contentsSize: 11.5,
+              toAddrSize: 15.5, toNameSize: 20, fromAddrSize: 11, fromNameSize: 13.5, contentsSize: 12.5,
               offsetX: 0, offsetY: 0, scale: 100
             });
             showToast("文字サイズ・位置補正を初期値に戻しました");
