@@ -1038,29 +1038,34 @@
         </div>
 
         <div class="panel-section">
-          <div class="section-header"><h2 class="section-title">プリンター位置補正（オフセット・実寸調整）</h2></div>
-          <div style="font-size:0.73rem; color:var(--text-secondary); background:#f8fafc; border:1px solid var(--border-color); border-radius:6px; padding:0.5rem 0.65rem; margin-bottom:0.7rem; line-height:1.45;">
-            📏 <strong>実物原寸サイズ（枠幅158.2mm × 縦150.9mm）</strong>に設定されています。<br />
-            ※印刷設定で<strong>「倍率：100%（実際のサイズ）」</strong>を選び、「用紙に合わせる」を外すと実物とぴったり同じ大きさで印刷されます。
-          </div>
-          <div class="slider-row">
-            <div class="slider-header"><span>左右位置オフセット (X軸)</span><span id="val-offset-x" class="slider-val">0mm</span></div>
-            <input type="range" id="slider-offset-x" class="range-slider" min="-15" max="15" step="0.5" value="0" />
-          </div>
-          <div class="slider-row">
-            <div class="slider-header"><span>上下位置オフセット (Y軸)</span><span id="val-offset-y" class="slider-val">0mm</span></div>
-            <input type="range" id="slider-offset-y" class="range-slider" min="-15" max="15" step="0.5" value="0" />
-          </div>
-          <div class="slider-row">
-            <div class="slider-header"><span>全体スケール</span><span id="val-scale" class="slider-val">100%</span></div>
-            <input type="range" id="slider-scale" class="range-slider" min="80" max="140" step="1" value="100" />
-            <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.4rem;">
-              <button type="button" class="btn btn-outline btn-sm" data-preset-scale="100">100% (PC標準)</button>
-              <button type="button" class="btn btn-outline btn-sm" data-preset-scale="108">108% (AirPrint余白補正)</button>
-              <button type="button" class="btn btn-outline btn-sm" data-preset-scale="115">115% (大)</button>
-              <button type="button" class="btn btn-outline btn-sm" data-preset-scale="125">125% (特大)</button>
+          <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.28); border-radius:10px; padding:0.7rem 0.85rem; margin-bottom:0.75rem;">
+            <div style="font-size:0.78rem; font-weight:800; color:#065f46; display:flex; align-items:center; gap:0.35rem; margin-bottom:0.25rem;">
+              <span>✓ 余白・AirPrint原寸 自動計算済み（設定不要）</span>
             </div>
+            <p style="margin:0; font-size:0.72rem; color:#047857; line-height:1.45;">
+              レターパック実物原寸枠（横158.2mm × 縦150.9mm）、A4中央余白、iPad / iPhone AirPrint時の縮小逆補正はすべて自動適用されます。
+            </p>
           </div>
+
+          <details style="font-size:0.76rem; border-top:1px solid var(--border-subtle); padding-top:0.65rem;">
+            <summary style="cursor:pointer; font-size:0.73rem; font-weight:700; color:var(--text-secondary); user-select:none;">
+              ⚙ プリンター本体の物理的な給紙ズレ微調整（通常は変更不要）
+            </summary>
+            <div style="margin-top:0.65rem; padding:0.65rem; border-radius:8px; background:var(--bg-subtle); border:1px solid var(--border-color);">
+              <div class="slider-row">
+                <div class="slider-header"><span>左右位置オフセット (X軸)</span><span id="val-offset-x" class="slider-val">0mm</span></div>
+                <input type="range" id="slider-offset-x" class="range-slider" min="-15" max="15" step="0.5" value="0" />
+              </div>
+              <div class="slider-row">
+                <div class="slider-header"><span>上下位置オフセット (Y軸)</span><span id="val-offset-y" class="slider-val">0mm</span></div>
+                <input type="range" id="slider-offset-y" class="range-slider" min="-15" max="15" step="0.5" value="0" />
+              </div>
+              <div class="slider-row" style="margin-bottom:0;">
+                <div class="slider-header"><span>全体スケール微調整</span><span id="val-scale" class="slider-val">100%</span></div>
+                <input type="range" id="slider-scale" class="range-slider" min="80" max="140" step="1" value="100" />
+              </div>
+            </div>
+          </details>
         </div>
       </div>
     </aside>
@@ -1070,25 +1075,28 @@
 
   <div id="pwa-print-modal-backdrop" class="pwa-print-modal-backdrop no-print" role="dialog" aria-modal="true" aria-labelledby="pwa-print-modal-title">
     <div class="pwa-print-modal" style="max-width:520px; max-height:92vh; overflow-y:auto;">
-      <h3 id="pwa-print-modal-title">🖨️ A4原寸 PDF / AirPrint 印刷</h3>
-      <p style="margin-bottom:0.6rem;">
-        iPad / iPhone の AirPrint 自動縮小を自動で補正した<strong>実物原寸サイズ（枠幅158.2mm × 縦150.9mm）</strong>の印刷データを作成しました。そのまま下のボタンから印刷・PDF保存できます。
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
+        <h3 id="pwa-print-modal-title" style="margin:0;">🖨️ A4原寸 PDF / AirPrint 印刷</h3>
+        <button type="button" id="btn-pwa-close-modal-top" style="border:none; background:transparent; color:#64748b; font-size:1rem; font-weight:800; padding:0.2rem 0.45rem; border-radius:6px; cursor:pointer;">✕</button>
+      </div>
+      <p style="margin-bottom:0.65rem;">
+        iPad / iPhone の AirPrint 余白・自動縮小を自動計算して補正した<strong>A4実物原寸サイズ（210×297mm / 宛名枠 158.2×150.9mm）</strong>の印刷データを作成しました。そのまま下のボタンから印刷・PDF保存できます。
       </p>
-      <div id="pwa-render-preview-wrap" style="background:#e2e8f0; border:1px solid var(--border-color); border-radius:8px; padding:0.45rem; margin-bottom:0.75rem; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px;">
-        <div id="pwa-render-status" style="font-size:0.82rem; font-weight:700; color:var(--lp-blue-deep); padding:1rem;">⏳ A4原寸（210mm×297mm）の印刷用データを生成しています...</div>
-        <img id="pwa-render-img" alt="A4原寸印刷プレビュー" style="display:none; width:100%; max-width:300px; height:auto; background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:4px;" />
+      <div id="pwa-render-preview-wrap" style="background:#e2e8f0; border:1px solid var(--border-color); border-radius:10px; padding:0.6rem; margin-bottom:0.75rem; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px;">
+        <div id="pwa-render-status" style="font-size:0.82rem; font-weight:700; color:var(--lp-blue-deep); padding:1rem;">⏳ A4原寸（210mm×297mm）のAirPrint用PDFを生成しています...</div>
+        <img id="pwa-render-img" alt="A4原寸印刷プレビュー" style="display:none; width:100%; max-width:270px; height:auto; background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:4px;" />
       </div>
       <div class="pwa-print-modal-actions">
-        <button type="button" id="btn-pwa-native-share-pdf" class="btn btn-accent" style="padding:0.78rem; font-size:0.95rem; justify-content:center;">
-          📤 共有メニューから「プリント」/ PDF保存
+        <button type="button" id="btn-pwa-native-share-pdf" class="btn btn-accent" style="padding:0.78rem; font-size:0.92rem; justify-content:center; border-radius:10px;">
+          📤 共有メニューから「プリント (AirPrint)」/ PDF保存
         </button>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-          <button type="button" id="btn-pwa-download-pdf" class="btn btn-outline" style="padding:0.6rem; justify-content:center;">📥 A4 PDFを保存</button>
-          <a id="btn-pwa-open-safari-print" href="#" target="_blank" rel="noopener" class="btn btn-outline" style="padding:0.6rem; justify-content:center; text-align:center;">
+          <button type="button" id="btn-pwa-download-pdf" class="btn btn-outline" style="padding:0.6rem; justify-content:center; border-radius:10px;">📥 A4原寸PDFを保存</button>
+          <a id="btn-pwa-open-safari-print" href="#" target="_blank" rel="noopener" class="btn btn-outline" style="padding:0.6rem; justify-content:center; text-align:center; border-radius:10px;">
             🌐 Safariで開いて印刷
           </a>
         </div>
-        <button type="button" id="btn-pwa-close-modal" class="btn btn-outline" style="padding:0.55rem; justify-content:center;">閉じる</button>
+        <button type="button" id="btn-pwa-close-modal" class="btn btn-outline" style="padding:0.55rem; justify-content:center; border-radius:10px;">閉じる</button>
       </div>
     </div>
   </div>
@@ -3309,21 +3317,23 @@
           }
           saveCurrentDraftToCache();
 
-          let printEventTriggered = false;
-          const onBeforePrint = () => { printEventTriggered = true; };
-          window.addEventListener("beforeprint", onBeforePrint, { once: true });
+          if (isStandalonePwaMode() || isIosOrIpadOsDevice()) {
+            let printEventTriggered = false;
+            const onBeforePrint = () => { printEventTriggered = true; };
+            window.addEventListener("beforeprint", onBeforePrint, { once: true });
 
-          const mql = window.matchMedia ? window.matchMedia("print") : null;
-          const onMqlChange = (e) => { if (e && e.matches) printEventTriggered = true; };
-          if (mql && typeof mql.addEventListener === "function") {
-            mql.addEventListener("change", onMqlChange);
-          }
+            const mql = window.matchMedia ? window.matchMedia("print") : null;
+            const onMqlChange = (e) => { if (e && e.matches) printEventTriggered = true; };
+            if (mql && typeof mql.addEventListener === "function") {
+              mql.addEventListener("change", onMqlChange);
+            }
 
-          try {
-            window.print();
-          } catch (_) {}
+            if (!isStandalonePwaMode()) {
+              try {
+                window.print();
+              } catch (_) {}
+            }
 
-          if (isStandalonePwaMode()) {
             setTimeout(() => {
               window.removeEventListener("beforeprint", onBeforePrint);
               if (mql && typeof mql.removeEventListener === "function") {
@@ -3332,74 +3342,25 @@
               if (!printEventTriggered) {
                 openPwaPrintFallbackModal();
               }
-            }, 350);
+            }, isStandalonePwaMode() ? 80 : 380);
           } else {
-            setTimeout(() => {
-              window.removeEventListener("beforeprint", onBeforePrint);
-              if (mql && typeof mql.removeEventListener === "function") {
-                mql.removeEventListener("change", onMqlChange);
-              }
-            }, 1000);
+            try {
+              window.print();
+            } catch (_) {}
           }
         }
 
         const pwaModalBackdrop = document.getElementById("pwa-print-modal-backdrop");
         const pwaCloseBtn = document.getElementById("btn-pwa-close-modal");
+        const pwaCloseTopBtn = document.getElementById("btn-pwa-close-modal-top");
         const pwaNativeShareBtn = document.getElementById("btn-pwa-native-share-pdf");
         const pwaDownloadPdfBtn = document.getElementById("btn-pwa-download-pdf");
 
-        const modalScaleSlider = document.getElementById("modal-slider-scale");
-        const modalValScale = document.getElementById("modal-val-scale");
-
-        function setGlobalPrintScale(newScalePercent, regeneratePdf = false) {
-          const val = Math.max(80, Math.min(140, Number(newScalePercent) || 100));
-          const sl = document.getElementById("slider-scale");
-          const vl = document.getElementById("val-scale");
-          if (sl) sl.value = String(val);
-          if (vl) vl.textContent = val + "%";
-          if (modalScaleSlider) modalScaleSlider.value = String(val);
-          if (modalValScale) modalValScale.textContent = val + "%";
-          document.documentElement.style.setProperty("--print-scale", (val / 100).toFixed(2));
-          saveCurrentDraftToCache();
-          if (regeneratePdf) {
-            preparePwaPrintAssets();
-          }
-        }
-
-        document.querySelectorAll("[data-preset-scale]").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const sc = Number(btn.getAttribute("data-preset-scale")) || 100;
-            setGlobalPrintScale(sc, false);
-            showToast(`印刷倍率を ${sc}% に設定しました`);
-          });
-        });
-
-        document.querySelectorAll("[data-modal-scale]").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const sc = Number(btn.getAttribute("data-modal-scale")) || 100;
-            setGlobalPrintScale(sc, true);
-            showToast(`印刷サイズ倍率を ${sc}% に更新しました`);
-          });
-        });
-
-        if (modalScaleSlider) {
-          modalScaleSlider.addEventListener("input", () => {
-            if (modalValScale) modalValScale.textContent = modalScaleSlider.value + "%";
-          });
-          modalScaleSlider.addEventListener("change", () => {
-            setGlobalPrintScale(modalScaleSlider.value, true);
-          });
-        }
-
-        function syncModalScaleWithCurrent() {
-          const sl = document.getElementById("slider-scale");
-          const currentScale = sl ? Number(sl.value) || 100 : 100;
-          if (modalScaleSlider) modalScaleSlider.value = String(currentScale);
-          if (modalValScale) modalValScale.textContent = currentScale + "%";
-        }
-
         if (pwaCloseBtn && pwaModalBackdrop) {
           pwaCloseBtn.addEventListener("click", () => pwaModalBackdrop.classList.remove("open"));
+        }
+        if (pwaCloseTopBtn && pwaModalBackdrop) {
+          pwaCloseTopBtn.addEventListener("click", () => pwaModalBackdrop.classList.remove("open"));
         }
         if (pwaModalBackdrop) {
           pwaModalBackdrop.addEventListener("click", (e) => {
@@ -3449,16 +3410,9 @@
         document.addEventListener("change", () => saveCurrentDraftToCache());
 
         loadDraftFromCacheOrUrl();
-        syncModalScaleWithCurrent();
 
-        document.getElementById("btn-header-print").addEventListener("click", () => {
-          syncModalScaleWithCurrent();
-          handlePrintAction();
-        });
-        document.getElementById("btn-sidebar-print").addEventListener("click", () => {
-          syncModalScaleWithCurrent();
-          handlePrintAction();
-        });
+        document.getElementById("btn-header-print").addEventListener("click", handlePrintAction);
+        document.getElementById("btn-sidebar-print").addEventListener("click", handlePrintAction);
       }
 
       if (document.readyState === "loading") {
