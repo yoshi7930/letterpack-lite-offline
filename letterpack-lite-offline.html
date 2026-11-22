@@ -1069,32 +1069,18 @@
   <div id="toast-container" class="toast-container no-print"></div>
 
   <div id="pwa-print-modal-backdrop" class="pwa-print-modal-backdrop no-print" role="dialog" aria-modal="true" aria-labelledby="pwa-print-modal-title">
-    <div class="pwa-print-modal" style="max-width:560px; max-height:94vh; overflow-y:auto;">
-      <h3 id="pwa-print-modal-title">🖨️ A4原寸 PDF / 印刷プレビュー（サイズ補正付き）</h3>
-      <p style="margin-bottom:0.45rem;">
-        iPhone / iPad の AirPrint でプリンター側の余白設定により枠が縮小されて印刷される場合は、下の<strong>「印刷サイズ倍率（AirPrint縮小補正）」</strong>を <strong>108%〜125%</strong> に上げてから印刷してください。
+    <div class="pwa-print-modal" style="max-width:520px; max-height:92vh; overflow-y:auto;">
+      <h3 id="pwa-print-modal-title">🖨️ A4原寸 PDF / AirPrint 印刷</h3>
+      <p style="margin-bottom:0.6rem;">
+        iPad / iPhone の AirPrint 自動縮小を自動で補正した<strong>実物原寸サイズ（枠幅158.2mm × 縦150.9mm）</strong>の印刷データを作成しました。そのまま下のボタンから印刷・PDF保存できます。
       </p>
-      <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:8px; padding:0.6rem 0.75rem; margin-bottom:0.65rem;">
-        <div class="slider-header" style="margin-bottom:0.3rem;">
-          <span>📐 印刷サイズ倍率（AirPrint縮小補正）</span>
-          <span id="modal-val-scale" class="slider-val" style="font-size:0.9rem;">108%</span>
-        </div>
-        <input type="range" id="modal-slider-scale" class="range-slider" min="85" max="140" step="1" value="108" />
-        <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.35rem;">
-          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="100">100% (等倍)</button>
-          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="108">108% (AirPrint標準補正)</button>
-          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="115">115% (1回り拡大)</button>
-          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="125">125% (2〜3回り拡大)</button>
-          <button type="button" class="btn btn-outline btn-sm" data-modal-scale="135">135% (最大枠)</button>
-        </div>
-      </div>
-      <div id="pwa-render-preview-wrap" style="background:#e2e8f0; border:1px solid var(--border-color); border-radius:8px; padding:0.45rem; margin-bottom:0.65rem; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px;">
+      <div id="pwa-render-preview-wrap" style="background:#e2e8f0; border:1px solid var(--border-color); border-radius:8px; padding:0.45rem; margin-bottom:0.75rem; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px;">
         <div id="pwa-render-status" style="font-size:0.82rem; font-weight:700; color:var(--lp-blue-deep); padding:1rem;">⏳ A4原寸（210mm×297mm）の印刷用データを生成しています...</div>
         <img id="pwa-render-img" alt="A4原寸印刷プレビュー" style="display:none; width:100%; max-width:300px; height:auto; background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:4px;" />
       </div>
       <div class="pwa-print-modal-actions">
         <button type="button" id="btn-pwa-native-share-pdf" class="btn btn-accent" style="padding:0.78rem; font-size:0.95rem; justify-content:center;">
-          📤 共有メニューから「プリント」/ PDF保存（推奨）
+          📤 共有メニューから「プリント」/ PDF保存
         </button>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
           <button type="button" id="btn-pwa-download-pdf" class="btn btn-outline" style="padding:0.6rem; justify-content:center;">📥 A4 PDFを保存</button>
@@ -2642,6 +2628,11 @@
           }
         }
 
+        function isIosOrIpadOsDevice() {
+          const ua = navigator.userAgent || "";
+          return /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        }
+
         function isStandalonePwaMode() {
           return Boolean(
             (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
@@ -2737,12 +2728,16 @@
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, W, H);
 
-          const scaleVal = (Number(settings.scale) || 100) / 100;
+          const userScale = (Number(settings.scale) || 100) / 100;
+          // iOS / iPadOS AirPrint automatically shrinks A4 PDFs by ~14% to fit printer margins + Letter/A4 safe bounding boxes.
+          // When the user leaves the scale at the default 100% on iPad/iPhone, we automatically pre-compensate by 1.16x so it prints at exact 100% real-world dimensions without touching any slider!
+          const autoAirPrintFactor = (isIosOrIpadOsDevice() && Math.abs(userScale - 1) < 0.005) ? 1.16 : 1.0;
+          const scaleVal = userScale * autoAirPrintFactor;
           const offX = (Number(settings.offsetX) || 0) * MM;
           const offY = (Number(settings.offsetY) || 0) * MM;
 
           ctx.save();
-          // Transform origin at center of the address unit (105mm, 110mm) so scaling up to 130% never clips the top or right edge
+          // Transform origin at center of the address unit (105mm, 110mm) so auto-compensation fits cleanly within the A4 page
           ctx.translate(105 * MM + offX, 110 * MM + offY);
           ctx.scale(scaleVal, scaleVal);
           ctx.translate(-105 * MM, -110 * MM);
@@ -2919,12 +2914,12 @@
             ctx.beginPath(); ctx.moveTo(cx + cw - cm, cy + ch); ctx.lineTo(cx + cw, cy + ch); ctx.lineTo(cx + cw, cy + ch - cm); ctx.stroke();
 
             ctx.fillStyle = "#ffffff";
-            ctx.fillRect(cx + 5 * MM, cy - 1.6 * MM, 108 * MM, 3.2 * MM);
+            ctx.fillRect(cx + 5 * MM, cy - 1.6 * MM, 96 * MM, 3.2 * MM);
             ctx.fillStyle = "#334155";
             ctx.font = `800 ${ptToPx(5.5)}px ${fontStack}`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillText(`✂ キリトリ線（実物枠幅 158.2mm × 縦 150.9mm / 現在の倍率 ${Math.round(scaleVal * 100)}%）`, cx + 6 * MM, cy);
+            ctx.fillText("✂ キリトリ線（郵便番号＋宛名枠・この1枠を切り取るだけでそのまま貼付できます）", cx + 6 * MM, cy);
             ctx.restore();
           }
 
