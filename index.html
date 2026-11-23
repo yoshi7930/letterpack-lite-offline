@@ -129,18 +129,20 @@
       font-size: 7.5pt; font-weight: 900; letter-spacing: 0.04em; font-style: italic; user-select: none;
     }
     .lp-envelope-body { flex: 1; padding: 2.5mm 3mm 2mm 3mm; display: flex; flex-direction: column; justify-content: space-between; }
-    .lp-top-zip-row { display: flex; align-items: center; justify-content: flex-end; gap: 3mm; margin-top: 0.8mm; margin-bottom: 17.5mm; padding-right: 0; }
-    .top-zip-boxes { display: flex; align-items: center; gap: 1.95mm; }
+    .lp-top-zip-row { display: flex; align-items: center; justify-content: flex-end; gap: 3mm; margin-top: 0.8mm; margin-bottom: 16.5mm; padding-right: 0; }
+    .top-zip-boxes { display: flex; align-items: center; }
     .top-zip-box {
-      width: 10.0mm; height: 13.4mm; border: 0.55mm solid var(--lp-red); background: #ffffff;
+      width: 7.0mm; height: 9.5mm; border: 0.45mm solid var(--lp-red); background: #ffffff;
       text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace;
-      font-size: 20pt; font-weight: 800; color: var(--lp-ink); padding: 0; outline: none;
+      font-size: 16pt; font-weight: 800; line-height: 9.5mm; color: var(--lp-ink); padding: 0; margin: 0; outline: none;
     }
-    .top-zip-box.first-3 { border-width: 0.75mm; }
+    .top-zip-box.first-3 { border-width: 0.65mm; }
+    #to-zip-1, #to-zip-2 { margin-left: 1.0mm; }
+    #to-zip-4, #to-zip-5, #to-zip-6 { margin-left: 0.8mm; }
     .top-zip-box:focus { background: #fffbeb; box-shadow: 0 0 0 2px rgba(215, 38, 43, 0.25); }
-    .top-zip-hyphen { width: 2.2mm; height: 0.65mm; background: var(--lp-red); margin: 0 -0.45mm; }
-    .lp-two-col-grid { display: grid; grid-template-columns: 32mm 158.2mm 3.5mm; gap: 2mm; align-items: start; justify-content: center; margin-top: 0; }
-    .lp-left-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding-top: 31.7mm; }
+    .top-zip-hyphen { width: 2.0mm; height: 0.6mm; background: var(--lp-red); margin: 0 0.8mm; flex-shrink: 0; }
+    .lp-two-col-grid { display: grid; grid-template-columns: 32mm 158.0mm 3.5mm; gap: 2mm; align-items: start; justify-content: center; margin-top: 0; }
+    .lp-left-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding-top: 26.8mm; }
     .lp-stamp-430 {
       width: 30mm; background: var(--lp-blue); color: #ffffff; padding: 2mm 2mm 1.6mm;
       display: flex; flex-direction: column; align-items: center; position: relative; user-select: none; border: 1px solid var(--lp-blue);
@@ -151,9 +153,9 @@
     .stamp-bottom-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 5.5pt; font-weight: 800; border-top: 0.8px solid rgba(255,255,255,0.5); padding-top: 0.6mm; }
     .stamp-cancel-lines { position: absolute; bottom: -1.5mm; right: 1mm; width: 9mm; height: 9mm; pointer-events: none; }
     .fold-dotted-notice { margin-top: 66mm; width: 100%; text-align: center; font-size: 4.8pt; color: #64748b; line-height: 1.3; border-bottom: 1px dotted #94a3b8; padding-bottom: 1mm; }
-    .lp-center-col { display: flex; flex-direction: column; width: 158.2mm; }
-    .lp-address-table-outer { position: relative; width: 158.2mm; border: 0.5mm solid #111827; background: #ffffff; }
-    .lp-row-to { display: grid; grid-template-columns: 32.3mm 1fr; border-bottom: 0.45mm solid #111827; min-height: 68.6mm; }
+    .lp-center-col { display: flex; flex-direction: column; width: 158.0mm; }
+    .lp-address-table-outer { position: relative; width: 158.0mm; height: 150.0mm; border: 0.5mm solid #111827; background: #ffffff; box-sizing: border-box; }
+    .lp-row-to { display: grid; grid-template-columns: 32.0mm 1fr; border-bottom: 0.45mm solid #111827; height: 68.0mm; box-sizing: border-box; overflow: hidden; }
     .lp-sidebar-to {
       background: var(--lp-blue-mid); color: #ffffff; border-right: 0.4mm solid #111827;
       display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 6.5mm; position: relative; user-select: none;
@@ -161,77 +163,77 @@
     .sidebar-jp-label { font-size: 8.5pt; font-weight: 900; letter-spacing: 0.05em; }
     .sidebar-en-label { font-size: 20pt; font-weight: 900; line-height: 1.05; font-family: "Arial", "Helvetica", sans-serif; margin-top: 0.8mm; }
     .to-up-arrow-svg { width: 16mm; height: 28mm; margin-top: auto; margin-bottom: -0.5mm; display: block; }
-    .lp-fields-to { padding: 2mm 3.2mm 1.8mm; display: flex; flex-direction: column; justify-content: space-between; }
-    .field-head-bar { display: flex; align-items: flex-start; justify-content: space-between; }
-    .bilingual-label { display: flex; flex-direction: column; line-height: 1.15; color: #111827; user-select: none; }
+    .lp-fields-to { padding: 2.0mm 3.2mm 1.5mm; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }
+    .field-head-bar { display: flex; align-items: flex-start; justify-content: space-between; height: 6.0mm; }
+    .bilingual-label { display: flex; flex-direction: column; line-height: 1.1; color: #111827; user-select: none; flex-shrink: 0; }
     .bilingual-label .lbl-jp { font-size: 7pt; font-weight: 800; }
-    .bilingual-label .lbl-en { font-size: 6pt; font-weight: 700; font-family: "Arial", sans-serif; }
-    .address-lines-wrap { position: relative; margin: 0.8mm 0 1.2mm; }
+    .bilingual-label .lbl-en { font-size: 5.8pt; font-weight: 700; font-family: "Arial", sans-serif; }
+    .address-lines-wrap { position: relative; margin: 0; }
     .canvas-editable {
       width: 100%; border: none; background: transparent; color: var(--lp-ink);
-      font-family: var(--label-font); outline: none; resize: none; padding: 0.3mm 1mm; border-radius: 2px;
+      font-family: var(--label-font); outline: none; resize: none; padding: 0 1mm; margin: 0; border-radius: 2px;
     }
     .canvas-editable:hover { background: rgba(0, 91, 171, 0.04); }
     .canvas-editable:focus { background: #fffef0; box-shadow: inset 0 0 0 1.4px var(--lp-blue); }
     .canvas-editable::placeholder { color: #94a3b8; font-weight: 400; opacity: 0.7; }
     .to-address-textarea {
-      font-size: var(--to-addr-size); font-weight: 700; line-height: 14.5mm; height: 29.5mm;
+      display: block; font-size: var(--to-addr-size); font-weight: 700; line-height: 13.5mm; height: 27.0mm;
       background-image: linear-gradient(to right, #94a3b8 40%, transparent 0%), linear-gradient(to right, #94a3b8 40%, transparent 0%);
-      background-position: 0 14.2mm, 0 28.8mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
+      background-position: 0 13.2mm, 0 26.7mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
     }
-    .name-block-wrap { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 2.5mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 1mm; min-height: 18.5mm; }
-    .name-inputs-stack { display: flex; flex-direction: column; gap: 0.6mm; }
-    .subname-input { font-size: calc(var(--to-name-size) * 0.56); font-weight: 600; height: 6.5mm; }
-    .mainname-input { font-size: var(--to-name-size); font-weight: 800; line-height: 1.2; min-height: 10.5mm; }
+    .name-block-wrap { display: grid; grid-template-columns: 16mm 1fr auto; align-items: end; gap: 1.5mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 0.6mm; height: 21.0mm; box-sizing: border-box; }
+    .name-inputs-stack { display: flex; flex-direction: column; justify-content: flex-end; gap: 0.4mm; height: 100%; }
+    .subname-input { font-size: calc(var(--to-name-size) * 0.56); font-weight: 600; height: 6.2mm; line-height: 6.2mm; }
+    .mainname-input { font-size: var(--to-name-size); font-weight: 800; line-height: 11.5mm; height: 11.5mm; }
     .sama-select {
       appearance: none; -webkit-appearance: none; border: 1px dashed transparent; background: transparent;
       font-family: var(--label-font); font-size: 15pt; font-weight: 800; color: #111827; padding: 0.2mm 1mm; cursor: pointer; text-align: right;
     }
-    .tel-line-row { display: flex; align-items: center; justify-content: space-between; padding-top: 1mm; min-height: 8.5mm; }
-    .tel-brackets-wrap { display: flex; align-items: center; gap: 1.5mm; font-size: 11.5pt; color: #111827; margin-right: 12mm; }
-    .tel-input-field { width: 54mm; text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 11.5pt; font-weight: 700; }
-    .lp-row-from { display: grid; grid-template-columns: 32.3mm 1fr; border-bottom: 0.45mm solid #111827; min-height: 53.0mm; }
+    .tel-line-row { display: flex; align-items: center; justify-content: space-between; padding-top: 0.5mm; height: 8.5mm; box-sizing: border-box; }
+    .tel-brackets-wrap { display: flex; align-items: center; gap: 1.5mm; font-size: 11.5pt; color: #111827; margin-right: 8mm; }
+    .tel-input-field { width: 54mm; height: 7.0mm; line-height: 7.0mm; text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 11.5pt; font-weight: 700; }
+    .lp-row-from { display: grid; grid-template-columns: 32.0mm 1fr; border-bottom: 0.45mm solid #111827; height: 52.0mm; box-sizing: border-box; overflow: hidden; }
     .lp-sidebar-from {
       background: var(--lp-blue-pale); color: #111827; border-right: 0.4mm solid #111827;
       display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2mm; user-select: none;
     }
     .from-arrow-tail { display: flex; flex-direction: column; gap: 1.4mm; margin-bottom: 3.5mm; }
     .tail-sq { width: 4.2mm; height: 1.8mm; background: var(--lp-blue); }
-    .lp-fields-from { padding: 1.8mm 3.2mm 1.5mm; display: flex; flex-direction: column; justify-content: space-between; }
-    .from-top-bar { display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
-    .from-addr-zip-group { display: flex; align-items: center; gap: 3.5mm; }
-    .from-zip-boxes { display: flex; align-items: center; gap: 0.9mm; }
+    .lp-fields-from { padding: 1.5mm 3.2mm 1.2mm; display: flex; flex-direction: column; justify-content: space-between; height: 100%; box-sizing: border-box; }
+    .from-top-bar { display: flex; align-items: center; justify-content: space-between; gap: 2mm; height: 6.5mm; }
+    .from-addr-zip-group { display: flex; align-items: center; gap: 3.0mm; }
+    .from-zip-boxes { display: flex; align-items: center; gap: 0.8mm; }
     .from-zip-box {
-      width: 4.5mm; height: 6.1mm; border: 0.3mm solid #94a3b8; background: #ffffff;
-      text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 10.5pt; font-weight: 700; color: var(--lp-ink); padding: 0; outline: none;
+      width: 4.4mm; height: 5.8mm; border: 0.3mm solid #94a3b8; background: #ffffff;
+      text-align: center; font-family: "Courier New", "BIZ UDPGothic", monospace; font-size: 10pt; font-weight: 700; line-height: 5.8mm; color: var(--lp-ink); padding: 0; margin: 0; outline: none;
     }
     .from-zip-hyphen { width: 1.4mm; height: 0.35mm; background: #94a3b8; }
     .from-address-textarea {
-      font-size: var(--from-addr-size); font-weight: 600; line-height: 8.8mm; height: 18mm;
+      display: block; font-size: var(--from-addr-size); font-weight: 600; line-height: 9.0mm; height: 18.0mm;
       background-image: linear-gradient(to right, #94a3b8 40%, transparent 0%), linear-gradient(to right, #94a3b8 40%, transparent 0%);
-      background-position: 0 8.5mm, 0 17.3mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
+      background-position: 0 8.7mm, 0 17.7mm; background-size: 3px 1px; background-repeat: repeat-x; overflow: hidden;
     }
-    .from-name-block { display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 2.5mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 0.8mm; min-height: 12.5mm; }
-    .from-name-input { font-size: var(--from-name-size); font-weight: 700; }
-    .lp-row-contents { padding: 1.8mm 3.2mm 1.8mm; display: flex; flex-direction: column; justify-content: space-between; min-height: 29.3mm; }
+    .from-name-block { display: grid; grid-template-columns: 16mm 1fr auto; align-items: end; gap: 1.5mm; border-bottom: 1px dotted #94a3b8; padding-bottom: 0.5mm; height: 13.5mm; box-sizing: border-box; }
+    .from-name-input { font-size: var(--from-name-size); font-weight: 700; height: 9.5mm; line-height: 9.5mm; }
+    .lp-row-contents { padding: 1.5mm 3.2mm 1.4mm; display: flex; flex-direction: column; justify-content: space-between; height: 30.0mm; box-sizing: border-box; overflow: hidden; }
     .contents-top-line { display: flex; align-items: flex-start; gap: 2.5mm; }
     .contents-bilingual { display: flex; align-items: baseline; gap: 1.2mm; white-space: nowrap; user-select: none; }
     .contents-bilingual .cb-jp { font-size: 9.5pt; font-weight: 900; }
     .contents-bilingual .cb-en { font-size: 6.2pt; font-weight: 700; line-height: 1.05; display: inline-block; }
-    .contents-note-text { font-size: 5.4pt; line-height: 1.25; color: #111827; user-select: none; }
-    .contents-main-input-row { display: flex; align-items: center; gap: 2mm; margin: 1mm 0; }
-    .contents-input-field { font-size: var(--contents-size); font-weight: 800; height: 8.5mm; border-bottom: 1px dotted #94a3b8; }
-    .contents-bottom-warn-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 2mm; margin-top: 0.8mm; }
-    .fraud-red-warning { color: var(--lp-red); font-size: 5.5pt; font-weight: 800; line-height: 1.28; user-select: none; }
+    .contents-note-text { font-size: 5.2pt; line-height: 1.22; color: #111827; user-select: none; }
+    .contents-main-input-row { display: flex; align-items: center; gap: 2mm; margin: 0.4mm 0; }
+    .contents-input-field { font-size: var(--contents-size); font-weight: 800; height: 8.5mm; line-height: 8.5mm; border-bottom: 1px dotted #94a3b8; }
+    .contents-bottom-warn-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 2mm; margin-top: 0.2mm; }
+    .fraud-red-warning { color: var(--lp-red); font-size: 5.2pt; font-weight: 800; line-height: 1.24; user-select: none; }
     .hazard-checkboxes { display: flex; align-items: center; gap: 2mm; color: var(--lp-red); font-size: 5.8pt; font-weight: 800; white-space: nowrap; }
     .hazard-chk-label { display: inline-flex; align-items: center; gap: 0.6mm; cursor: pointer; }
     .hazard-chk-label input { width: 3mm; height: 3mm; margin: 0; accent-color: var(--lp-red); }
-    .lp-right-edge-notes { writing-mode: vertical-rl; font-size: 4.5pt; color: #475569; line-height: 1.25; letter-spacing: 0.02em; display: flex; justify-content: space-between; height: 150.9mm; margin-top: 31.7mm; user-select: none; }
+    .lp-right-edge-notes { writing-mode: vertical-rl; font-size: 4.5pt; color: #475569; line-height: 1.25; letter-spacing: 0.02em; display: flex; justify-content: space-between; height: 150.0mm; margin-top: 26.8mm; user-select: none; }
     .lp-unified-cutout-unit {
       position: relative;
       display: flex;
       flex-direction: column;
-      width: 158.2mm;
+      width: 158.0mm;
     }
     .lp-howto-row { margin-top: 1.5mm; display: grid; grid-template-columns: 6mm repeat(5, 1fr); gap: 1.4mm; align-items: stretch; user-select: none; }
     .howto-vertical-pill { background: var(--lp-blue); color: #ffffff; border-radius: 1.5mm; writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; font-size: 6.5pt; font-weight: 900; letter-spacing: 0.12em; padding: 1mm 0; }
@@ -1083,16 +1085,16 @@
         <div class="panel-section">
           <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.28); border-radius:10px; padding:0.7rem 0.85rem; margin-bottom:0.75rem;">
             <div style="font-size:0.78rem; font-weight:800; color:#065f46; display:flex; align-items:center; gap:0.35rem; margin-bottom:0.25rem;">
-              <span>✓ 余白・AirPrint原寸 自動計算済み（設定不要）</span>
+              <span>✓ 実物1:1原寸（158.0×150.0mm）・A4中央余白 設定済み</span>
             </div>
             <p style="margin:0; font-size:0.72rem; color:#047857; line-height:1.45;">
-              レターパック実物原寸枠（横158.2mm × 縦150.9mm）、A4中央余白、iPad / iPhone AirPrint時の縮小逆補正はすべて自動適用されます。
+              レターパック実物原寸枠（外枠 横158.0mm×縦150.0mm ／ お届け先 126×68mm・ご依頼主 126×52mm・品名 30mm・郵便番号7桁枠 57mm）を等倍（100%）でA4中央（左右余白26.0mm）に配置しています。
             </p>
           </div>
 
           <details style="font-size:0.76rem; border-top:1px solid var(--border-subtle); padding-top:0.65rem;">
             <summary style="cursor:pointer; font-size:0.73rem; font-weight:700; color:var(--text-secondary); user-select:none;">
-              ⚙ プリンター本体の物理的な給紙ズレ微調整（通常は変更不要）
+              ⚙ プリンター本体の物理的な給紙ズレ・倍率微調整（通常は変更不要）
             </summary>
             <div style="margin-top:0.65rem; padding:0.65rem; border-radius:8px; background:var(--bg-subtle); border:1px solid var(--border-color);">
               <div class="slider-row">
@@ -1123,7 +1125,7 @@
         <button type="button" id="btn-pwa-close-modal-top" style="border:none; background:transparent; color:#64748b; font-size:1rem; font-weight:800; padding:0.2rem 0.45rem; border-radius:6px; cursor:pointer;">✕</button>
       </div>
       <p style="margin-bottom:0.65rem;">
-        iPad / iPhone の AirPrint 余白・自動縮小を自動計算して補正した<strong>A4実物原寸サイズ（210×297mm / 宛名枠 158.2×150.9mm）</strong>の印刷データを作成しました。そのまま下のボタンから印刷・PDF保存できます。
+        レターパック実物と1:1の<strong>A4等倍原寸サイズ（用紙 210×297mm / 宛名外枠 158.0×150.0mm・お届け先記入欄 126×68mm・ご依頼主記入欄 126×52mm）</strong>で印刷用PDFデータを作成しました。そのまま下のボタンから印刷・PDF保存できます。
       </p>
       <div id="pwa-render-preview-wrap" style="background:#e2e8f0; border:1px solid var(--border-color); border-radius:10px; padding:0.6rem; margin-bottom:0.75rem; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:220px;">
         <div id="pwa-render-status" style="font-size:0.82rem; font-weight:700; color:var(--lp-blue-deep); padding:1rem;">⏳ A4原寸（210mm×297mm）のAirPrint用PDFを生成しています...</div>
@@ -2780,18 +2782,15 @@
           ctx.fillRect(0, 0, W, H);
 
           const userScale = (Number(settings.scale) || 100) / 100;
-          // iOS / iPadOS AirPrint automatically shrinks A4 PDFs by ~14% to fit printer margins + Letter/A4 safe bounding boxes.
-          // When the user leaves the scale at the default 100% on iPad/iPhone, we automatically pre-compensate by 1.16x so it prints at exact 100% real-world dimensions without touching any slider!
-          const autoAirPrintFactor = (isIosOrIpadOsDevice() && Math.abs(userScale - 1) < 0.005) ? 1.16 : 1.0;
-          const scaleVal = userScale * autoAirPrintFactor;
+          const scaleVal = userScale;
           const offX = (Number(settings.offsetX) || 0) * MM;
           const offY = (Number(settings.offsetY) || 0) * MM;
 
           ctx.save();
-          // Transform origin at center of the address unit (105mm, 110mm) so auto-compensation fits cleanly within the A4 page
-          ctx.translate(105 * MM + offX, 110 * MM + offY);
+          // Transform origin at center of the A4 sheet / address unit (105mm, 120mm)
+          ctx.translate(105 * MM + offX, 120 * MM + offY);
           ctx.scale(scaleVal, scaleVal);
-          ctx.translate(-105 * MM, -110 * MM);
+          ctx.translate(-105 * MM, -120 * MM);
 
           const ptToPx = (pt) => pt * (25.4 / 72) * MM;
 
@@ -2807,6 +2806,7 @@
             ctx.save();
             ctx.font = fontCss;
             ctx.fillStyle = color;
+            ctx.textAlign = "left";
             ctx.textBaseline = "middle";
             const rawLines = String(text).split(/\r?\n/);
             const lines = [];
@@ -2841,11 +2841,10 @@
             ctx.restore();
           }
 
-          // Center the 158.2mm address table horizontally on the 210mm A4 page:
-          // (210 - 158.2) / 2 = 25.9mm left & right margin!
-          // Having ~26mm of white margin on left/right and 18mm on top prevents printers/AirPrint from shrinking the page!
-          const centerColW = 158.2 * MM;
-          const centerColX = ((210 - 158.2) / 2) * MM; // 25.9mm
+          // Center the 158.0mm address table horizontally on the 210mm A4 page:
+          // (210 - 158.0) / 2 = 26.0mm left & right margin
+          const centerColW = 158.0 * MM;
+          const centerColX = ((210 - 158.0) / 2) * MM; // 26.0mm
           const bodyTopY = 17.5 * MM;
 
           if (isFull) {
@@ -2864,49 +2863,49 @@
               }
             });
 
-            // Compact 430 / 370 Stamp badge placed neatly to the left of the top 7-digit zip boxes (inside the 158.2mm column width so it doesn't widen the page!)
+            // Compact 430 / 370 Stamp badge placed neatly to the left of the top 7-digit zip boxes
             const stampX = centerColX;
             const stampY = bodyTopY;
             const stampW = 28 * MM;
-            const stampH = 24 * MM;
+            const stampH = 23 * MM;
             ctx.fillStyle = BLUE;
             ctx.fillRect(stampX, stampY, stampW, stampH);
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
             ctx.textBaseline = "top";
             ctx.font = `italic 900 ${ptToPx(7.5)}px ${fontStack}`;
-            ctx.fillText("レターパック", stampX + stampW / 2, stampY + 1.6 * MM);
+            ctx.fillText("レターパック", stampX + stampW / 2, stampY + 1.5 * MM);
             ctx.font = `italic 900 ${ptToPx(13.5)}px ${fontStack}`;
-            ctx.fillText("ライト", stampX + stampW / 2, stampY + 5.0 * MM);
+            ctx.fillText("ライト", stampX + stampW / 2, stampY + 4.8 * MM);
             ctx.font = `900 ${ptToPx(20)}px "Arial Black", sans-serif`;
-            ctx.fillText(String(settings.stampPrice || "430"), stampX + stampW / 2, stampY + 11.0 * MM);
+            ctx.fillText(String(settings.stampPrice || "430"), stampX + stampW / 2, stampY + 10.5 * MM);
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
             ctx.lineWidth = 0.22 * MM;
             ctx.beginPath();
-            ctx.moveTo(stampX + 1.8 * MM, stampY + 19.6 * MM);
-            ctx.lineTo(stampX + stampW - 1.8 * MM, stampY + 19.6 * MM);
+            ctx.moveTo(stampX + 1.8 * MM, stampY + 18.8 * MM);
+            ctx.lineTo(stampX + stampW - 1.8 * MM, stampY + 18.8 * MM);
             ctx.stroke();
             ctx.font = `800 ${ptToPx(5)}px ${fontStack}`;
             ctx.textAlign = "left";
-            ctx.fillText("NIPPON", stampX + 2 * MM, stampY + 20.4 * MM);
+            ctx.fillText("NIPPON", stampX + 2 * MM, stampY + 19.6 * MM);
             ctx.textAlign = "right";
-            ctx.fillText("日本郵便", stampX + stampW - 2 * MM, stampY + 20.4 * MM);
+            ctx.fillText("日本郵便", stampX + stampW - 2 * MM, stampY + 19.6 * MM);
           }
 
-          // Top 7-digit zip boxes (10.0mm x 13.4mm, right-aligned to centerColX + centerColW)
+          // Top 7-digit zip boxes (JIS standard: 7.0mm x 9.5mm, pitch 8.0mm first 3, 3.6mm hyphen gap, pitch 7.8mm last 4 -> 57.0mm total width)
           const zipTopY = bodyTopY + 0.8 * MM;
-          const zipBoxW = 10.0 * MM;
-          const zipBoxH = 13.4 * MM;
-          // 7 boxes (70mm) + gaps = 83.0mm total width, right aligned to centerColX + centerColW
-          const zipStartX = centerColX + centerColW - 83.0 * MM;
+          const zipBoxW = 7.0 * MM;
+          const zipBoxH = 9.5 * MM;
+          const zipTotalW = 57.0 * MM;
+          const zipStartX = centerColX + centerColW - zipTotalW;
           const toZipDigits = String(state.to.zip || "").padEnd(7, " ");
-          const zipOffsets = [0, 11.95, 23.9, 36.8, 48.75, 60.7, 72.65];
+          const zipOffsets = [0, 8.0, 16.0, 26.6, 34.4, 42.2, 50.0];
 
           for (let i = 0; i < 7; i++) {
             const bx = zipStartX + zipOffsets[i] * MM;
             if (!isTextOnly) {
               ctx.strokeStyle = RED;
-              ctx.lineWidth = (i < 3 ? 0.75 : 0.55) * MM;
+              ctx.lineWidth = (i < 3 ? 0.65 : 0.45) * MM;
               ctx.fillStyle = "#ffffff";
               ctx.fillRect(bx, zipTopY, zipBoxW, zipBoxH);
               ctx.strokeRect(bx, zipTopY, zipBoxW, zipBoxH);
@@ -2914,27 +2913,27 @@
             const ch = toZipDigits[i] ? toZipDigits[i].trim() : "";
             if (ch) {
               ctx.fillStyle = INK;
-              ctx.font = `800 ${ptToPx(20)}px "Courier New", "BIZ UDPGothic", monospace`;
+              ctx.font = `800 ${ptToPx(16)}px "Courier New", "BIZ UDPGothic", monospace`;
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
-              ctx.fillText(ch, bx + zipBoxW / 2, zipTopY + zipBoxH / 2 + 0.3 * MM);
+              ctx.fillText(ch, bx + zipBoxW / 2, zipTopY + zipBoxH / 2 + 0.15 * MM);
             }
           }
           if (!isTextOnly) {
             ctx.fillStyle = RED;
-            ctx.fillRect(zipStartX + 34.2 * MM, zipTopY + zipBoxH / 2 - 0.32 * MM, 2.2 * MM, 0.65 * MM);
+            ctx.fillRect(zipStartX + 23.8 * MM, zipTopY + zipBoxH / 2 - 0.3 * MM, 2.0 * MM, 0.6 * MM);
           }
 
-          // Main Address Table Outer (width 158.2mm, height 150.9mm: To 68.6mm + From 53.0mm + Contents 29.3mm)
-          const tableY = zipTopY + zipBoxH + 17.5 * MM;
-          const tableW = 158.2 * MM;
-          const toH = 68.6 * MM;
-          const fromH = 53.0 * MM;
-          const contentsH = 29.3 * MM;
+          // Main Address Table Outer (width 158.0mm, height 150.0mm: To 68.0mm + From 52.0mm + Contents 30.0mm, sidebar 32.0mm -> writing width 126.0mm)
+          const tableY = zipTopY + zipBoxH + 16.5 * MM;
+          const tableW = 158.0 * MM;
+          const toH = 68.0 * MM;
+          const fromH = 52.0 * MM;
+          const contentsH = 30.0 * MM;
           const tableH = toH + fromH + contentsH;
-          const sideColW = 32.3 * MM;
+          const sideColW = 32.0 * MM;
           const fieldsX = centerColX + sideColW;
-          const fieldsW = tableW - sideColW;
+          const fieldsW = tableW - sideColW; // 126.0mm
 
           // Unified Cut Guide Frame (when enabled and not text-only)
           if ((showCut || isCutout) && !isTextOnly) {
@@ -3038,36 +3037,37 @@
             ctx.textBaseline = "top";
             ctx.font = `800 ${ptToPx(7)}px ${fontStack}`;
             ctx.fillText(jp, x, y);
-            ctx.font = `700 ${ptToPx(6)}px "Arial", sans-serif`;
+            ctx.font = `700 ${ptToPx(5.8)}px "Arial", sans-serif`;
             ctx.fillText(en, x, y + 2.7 * MM);
             ctx.restore();
           }
 
-          // --- TO ROW FIELDS ---
+          // --- TO ROW FIELDS (68.0mm total height) ---
           const toPadX = fieldsX + 3.2 * MM;
-          const toInnerW = fieldsW - 6.4 * MM;
-          drawBilingualCap("おところ：", "Address", toPadX, tableY + 2 * MM);
+          const toInnerW = fieldsW - 6.4 * MM; // 119.6mm
+          drawBilingualCap("おところ：", "Address", toPadX, tableY + 2.0 * MM);
+          // Address lines: top=tableY+8.0mm, lineHeight=13.5mm -> line 1 bottom=21.5mm (dotted at 21.2mm), line 2 bottom=35.0mm (dotted at 34.7mm)
           if (!isTextOnly) {
-            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 22.2 * MM);
-            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 36.8 * MM);
+            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 21.2 * MM);
+            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 34.7 * MM);
           }
           const toAddrPt = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--to-addr-size")) || settings.toAddrSize || 15.5;
           drawWrappedText(
             state.to.address,
             toPadX + 1 * MM,
-            tableY + 8 * MM,
+            tableY + 8.0 * MM,
             toInnerW - 2 * MM,
-            14.5 * MM,
+            13.5 * MM,
             2,
             `700 ${ptToPx(toAddrPt)}px ${fontStack}`,
             INK
           );
 
-          // To Name block
-          const toNameTopY = tableY + 39 * MM;
-          drawBilingualCap("おなまえ：", "Name", toPadX, toNameTopY);
+          // To Name block (top=tableY+37.0mm, height=21.0mm -> dotted line at tableY+58.0mm)
+          const toNameTopY = tableY + 37.0 * MM;
+          drawBilingualCap("おなまえ：", "Name", toPadX, toNameTopY + 0.5 * MM);
           if (!isTextOnly) {
-            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 57.5 * MM);
+            drawDottedHLine(toPadX, toPadX + toInnerW, tableY + 58.0 * MM);
           }
           const toNamePt = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--to-name-size")) || settings.toNameSize || 20;
           if (state.to.subname) {
@@ -3075,51 +3075,51 @@
             ctx.font = `600 ${ptToPx(toNamePt * 0.56)}px ${fontStack}`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillText(state.to.subname, toPadX + 16 * MM, toNameTopY + 3.5 * MM);
+            ctx.fillText(state.to.subname, toPadX + 18.5 * MM, toNameTopY + 5.4 * MM);
           }
           if (state.to.name) {
             ctx.fillStyle = INK;
             ctx.font = `800 ${ptToPx(toNamePt)}px ${fontStack}`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillText(state.to.name, toPadX + 16 * MM, toNameTopY + 12.2 * MM);
+            ctx.fillText(state.to.name, toPadX + 18.5 * MM, toNameTopY + 14.6 * MM);
           }
           if (state.to.honorific) {
             ctx.fillStyle = INK;
             ctx.font = `800 ${ptToPx(15)}px ${fontStack}`;
             ctx.textAlign = "right";
             ctx.textBaseline = "middle";
-            ctx.fillText(state.to.honorific, toPadX + toInnerW - 1 * MM, toNameTopY + 12.5 * MM);
+            ctx.fillText(state.to.honorific, toPadX + toInnerW - 1 * MM, toNameTopY + 15.0 * MM);
           }
 
-          // To Tel block
-          const toTelY = tableY + 59.5 * MM;
+          // To Tel block (top=tableY+58.0mm, height=8.5mm -> center at tableY+62.5mm)
+          const toTelY = tableY + 59.0 * MM;
           drawBilingualCap("電話番号：", "Telephone Number", toPadX, toTelY);
           if (!isTextOnly) {
             ctx.fillStyle = INK;
             ctx.font = `700 ${ptToPx(11.5)}px ${fontStack}`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillText("（", toPadX + toInnerW - 68 * MM, toTelY + 3.5 * MM);
-            ctx.fillText("）", toPadX + toInnerW - 12 * MM, toTelY + 3.5 * MM);
+            ctx.fillText("（", toPadX + toInnerW - 64 * MM, toTelY + 3.6 * MM);
+            ctx.fillText("）", toPadX + toInnerW - 8 * MM, toTelY + 3.6 * MM);
           }
           if (state.to.tel) {
             ctx.fillStyle = INK;
             ctx.font = `700 ${ptToPx(11.5)}px "Courier New", "BIZ UDPGothic", monospace`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(state.to.tel, toPadX + toInnerW - 39 * MM, toTelY + 3.5 * MM);
+            ctx.fillText(state.to.tel, toPadX + toInnerW - 35 * MM, toTelY + 3.6 * MM);
           }
 
-          // --- FROM ROW FIELDS ---
+          // --- FROM ROW FIELDS (52.0mm total height) ---
           const fromTopY = tableY + toH;
-          drawBilingualCap("おところ：", "Address", toPadX, fromTopY + 1.8 * MM);
+          drawBilingualCap("おところ：", "Address", toPadX, fromTopY + 1.6 * MM);
 
-          // From 7 small zip boxes
-          const fZipStartX = toPadX + 18 * MM;
-          const fZipY = fromTopY + 1.6 * MM;
-          const fBoxW = 4.5 * MM;
-          const fBoxH = 6.1 * MM;
+          // From 7 small zip boxes (4.4mm x 5.8mm)
+          const fZipStartX = toPadX + 18.0 * MM;
+          const fZipY = fromTopY + 1.5 * MM;
+          const fBoxW = 4.4 * MM;
+          const fBoxH = 5.8 * MM;
           const fromZipDigits = String(state.from.zip || "").padEnd(7, " ");
           let fCurX = fZipStartX;
           for (let i = 0; i < 7; i++) {
@@ -3128,7 +3128,7 @@
                 ctx.fillStyle = "#94a3b8";
                 ctx.fillRect(fCurX, fZipY + fBoxH / 2 - 0.18 * MM, 1.4 * MM, 0.35 * MM);
               }
-              fCurX += 2.3 * MM;
+              fCurX += 2.2 * MM;
             }
             if (!isTextOnly) {
               ctx.strokeStyle = "#94a3b8";
@@ -3140,35 +3140,36 @@
             const ch = fromZipDigits[i] ? fromZipDigits[i].trim() : "";
             if (ch) {
               ctx.fillStyle = INK;
-              ctx.font = `700 ${ptToPx(10.5)}px "Courier New", "BIZ UDPGothic", monospace`;
+              ctx.font = `700 ${ptToPx(10)}px "Courier New", "BIZ UDPGothic", monospace`;
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
-              ctx.fillText(ch, fCurX + fBoxW / 2, fZipY + fBoxH / 2 + 0.2 * MM);
+              ctx.fillText(ch, fCurX + fBoxW / 2, fZipY + fBoxH / 2 + 0.15 * MM);
             }
-            fCurX += fBoxW + 0.9 * MM;
+            fCurX += fBoxW + 0.8 * MM;
           }
 
+          // From address lines: top=fromTopY+8.3mm, lineHeight=9.0mm -> line 1 bottom=17.3mm (dotted at 17.0mm), line 2 bottom=26.3mm (dotted at 26.0mm)
           if (!isTextOnly) {
-            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 17.5 * MM);
-            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 26.3 * MM);
+            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 17.0 * MM);
+            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 26.0 * MM);
           }
           const fromAddrPt = Number(settings.fromAddrSize) || 11;
           drawWrappedText(
             state.from.address,
             toPadX + 1 * MM,
-            fromTopY + 9 * MM,
+            fromTopY + 8.3 * MM,
             toInnerW - 2 * MM,
-            8.8 * MM,
+            9.0 * MM,
             2,
             `600 ${ptToPx(fromAddrPt)}px ${fontStack}`,
             INK
           );
 
-          // From Name block
-          const fromNameTopY = fromTopY + 28.5 * MM;
-          drawBilingualCap("おなまえ：", "Name", toPadX, fromNameTopY);
+          // From Name block (top=fromTopY+28.0mm, height=13.5mm -> dotted line at fromTopY+41.5mm)
+          const fromNameTopY = fromTopY + 28.0 * MM;
+          drawBilingualCap("おなまえ：", "Name", toPadX, fromNameTopY + 0.5 * MM);
           if (!isTextOnly) {
-            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 41 * MM);
+            drawDottedHLine(toPadX, toPadX + toInnerW, fromTopY + 41.5 * MM);
           }
           const fromNamePt = Number(settings.fromNameSize) || 13.5;
           if (state.from.name) {
@@ -3176,7 +3177,7 @@
             ctx.font = `700 ${ptToPx(fromNamePt)}px ${fontStack}`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillText(state.from.name, toPadX + 16 * MM, fromNameTopY + 7.5 * MM);
+            ctx.fillText(state.from.name, toPadX + 18.5 * MM, fromNameTopY + 8.2 * MM);
           }
           const fromHonText = isTextOnly ? (state.from.honorific || "") : (state.from.honorific || "様");
           if (fromHonText) {
@@ -3184,29 +3185,29 @@
             ctx.font = `800 ${ptToPx(11)}px ${fontStack}`;
             ctx.textAlign = "right";
             ctx.textBaseline = "middle";
-            ctx.fillText(fromHonText, toPadX + toInnerW - 1 * MM, fromNameTopY + 7.5 * MM);
+            ctx.fillText(fromHonText, toPadX + toInnerW - 1 * MM, fromNameTopY + 8.2 * MM);
           }
 
-          // From Tel block
-          const fromTelY = fromTopY + 43 * MM;
+          // From Tel block (top=fromTopY+42.3mm, height=8.5mm -> center at fromTopY+45.9mm)
+          const fromTelY = fromTopY + 42.3 * MM;
           drawBilingualCap("電話番号：", "Telephone Number", toPadX, fromTelY);
           if (!isTextOnly) {
             ctx.fillStyle = INK;
             ctx.font = `700 ${ptToPx(11.5)}px ${fontStack}`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillText("（", toPadX + toInnerW - 68 * MM, fromTelY + 3.5 * MM);
-            ctx.fillText("）", toPadX + toInnerW - 12 * MM, fromTelY + 3.5 * MM);
+            ctx.fillText("（", toPadX + toInnerW - 64 * MM, fromTelY + 3.6 * MM);
+            ctx.fillText("）", toPadX + toInnerW - 8 * MM, fromTelY + 3.6 * MM);
           }
           if (state.from.tel) {
             ctx.fillStyle = INK;
             ctx.font = `700 ${ptToPx(11.5)}px "Courier New", "BIZ UDPGothic", monospace`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(state.from.tel, toPadX + toInnerW - 39 * MM, fromTelY + 3.5 * MM);
+            ctx.fillText(state.from.tel, toPadX + toInnerW - 35 * MM, fromTelY + 3.6 * MM);
           }
 
-          // --- CONTENTS ROW ---
+          // --- CONTENTS ROW (30.0mm total height) ---
           const contTopY = tableY + toH + fromH;
           const contPadX = centerColX + 3.2 * MM;
           const contInnerW = tableW - 6.4 * MM;
@@ -3215,25 +3216,25 @@
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
             ctx.font = `900 ${ptToPx(9.5)}px ${fontStack}`;
-            ctx.fillText("品名：", contPadX, contTopY + 2 * MM);
+            ctx.fillText("品名：", contPadX, contTopY + 1.6 * MM);
             ctx.font = `700 ${ptToPx(5.8)}px "Arial", sans-serif`;
-            ctx.fillText("Description", contPadX + 11 * MM, contTopY + 1.8 * MM);
-            ctx.fillText("of contents", contPadX + 11 * MM, contTopY + 4.2 * MM);
+            ctx.fillText("Description", contPadX + 11 * MM, contTopY + 1.5 * MM);
+            ctx.fillText("of contents", contPadX + 11 * MM, contTopY + 3.8 * MM);
 
             ctx.font = `700 ${ptToPx(5.2)}px ${fontStack}`;
-            ctx.fillText("品名の記載が無い場合または航空機による輸送ができないものについては、配達が遅れる場合があります。", contPadX + 27 * MM, contTopY + 2 * MM);
+            ctx.fillText("品名の記載が無い場合または航空機による輸送ができないものについては、配達が遅れる場合があります。", contPadX + 27 * MM, contTopY + 1.6 * MM);
             ctx.font = `600 ${ptToPx(4.8)}px "Arial", sans-serif`;
-            ctx.fillText("Without a description of contents or if air transport is not possible, delivery may be delayed.", contPadX + 27 * MM, contTopY + 4.6 * MM);
+            ctx.fillText("Without a description of contents or if air transport is not possible, delivery may be delayed.", contPadX + 27 * MM, contTopY + 4.1 * MM);
 
             drawDottedHLine(contPadX, contPadX + contInnerW, contTopY + 17.5 * MM);
 
             // Fraud warning & hazard checkboxes
             ctx.fillStyle = RED;
             ctx.font = `800 ${ptToPx(5.2)}px ${fontStack}`;
-            ctx.fillText("現金を送ることはできません。「レターパックで現金送れ」はすべて詐欺です。", contPadX, contTopY + 19.5 * MM);
-            ctx.fillText("最寄りの警察（電話番号は＃9110）にご相談ください。", contPadX, contTopY + 22.3 * MM);
+            ctx.fillText("現金を送ることはできません。「レターパックで現金送れ」はすべて詐欺です。", contPadX, contTopY + 19.3 * MM);
+            ctx.fillText("最寄りの警察（電話番号は＃9110）にご相談ください。", contPadX, contTopY + 22.1 * MM);
             ctx.font = `600 ${ptToPx(4.5)}px "Arial", sans-serif`;
-            ctx.fillText("Cannot be used to send cash. Please be careful about fraud.", contPadX, contTopY + 25.1 * MM);
+            ctx.fillText("Cannot be used to send cash. Please be careful about fraud.", contPadX, contTopY + 24.8 * MM);
 
             const chkItems = [
               ["リチウム電池なし", state.hazardChecks && state.hazardChecks.noLithium],
@@ -3264,7 +3265,7 @@
             ctx.font = `800 ${ptToPx(contPt)}px ${fontStack}`;
             ctx.textAlign = "left";
             ctx.textBaseline = "middle";
-            ctx.fillText(state.contents, contPadX + 2 * MM, contTopY + 13 * MM);
+            ctx.fillText(state.contents, contPadX + 1 * MM, contTopY + 13.0 * MM);
           }
 
           // Lower decorative sections in Full-Design Mode
